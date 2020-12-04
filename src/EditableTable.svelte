@@ -5,17 +5,23 @@
   export let editableData = false;
 
   let longestRow;
+
   function handlePaste(event) {
     let pastedText = event.clipboardData.getData("text");
-    let rows = pastedText.split("\n");
-    headers = rows[0].split("\t");
-    data = [];
-    rows.forEach((row, i) => {
-      if (i > 0 && row.length > 0) {
-        data.push(row.split("\t"));
-      }
-    });
+
+    // only paste of there are characters besides just white space
+    if (pastedText.replace(/\s+/g, "").length > 0) {
+      let rows = pastedText.split("\n");
+      headers = rows[0].split("\t");
+      data = [];
+      rows.forEach((row, i) => {
+        if (i > 0 && row.length > 0) {
+          data.push(row.split("\t"));
+        }
+      });
+    }
   }
+
   $: {
     longestRow = 0;
     if (headers) {
