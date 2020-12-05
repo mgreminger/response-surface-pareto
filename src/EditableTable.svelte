@@ -53,6 +53,17 @@
     text-align: left;
     width: 50px;
   }
+
+  th {position: relative}
+
+  div.grip {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 5px;
+    position: absolute;
+    cursor: col-resize;
+  }
 </style>
 
 <table on:paste|preventDefault={handlePaste}>
@@ -61,13 +72,17 @@
       <tr>
         {#each Array(longestRow) as _, j}
           {#if editableHeaders}
-            <th contenteditable="true"
-              use:columnAdjust
+            <th>
+              <div contenteditable="true"
               bind:textContent={headers[j]}>
-              {headers[j] ? headers[j] : ''}
+              {headers[j] ? headers[j] : ''}</div>
+              <div class='grip' use:columnAdjust>&nbsp</div>
             </th>
           {:else}
-            <th use:columnAdjust>{headers[j] ? headers[j] : ''}</th>
+            <th>
+              <div>{headers[j] ? headers[j] : ''}</div>
+              <div class='grip' use:columnAdjust>&nbsp</div>
+            </th>
           {/if}
         {/each}
       </tr>

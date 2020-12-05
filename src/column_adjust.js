@@ -1,31 +1,18 @@
-export function columnAdjust(node, headers) {
+export function columnAdjust(node) {
+  let parent = node.parentNode
   let startOffset;
-  let grip;
-
-  node.style.position = 'relative'
-
-  grip = document.createElement('div');
-  grip.innerHTML = "&nbsp"
-  grip.style.top = 0;
-  grip.style.right = 0;
-  grip.style.bottom = 0;
-  grip.style.width = "5px";
-  grip.style.position = "absolute";
-  grip.style.cursor = "col-resize";
 
   function handleMouseDown (event) {
-    startOffset = node.offsetWidth - event.pageX;
+    startOffset = parent.offsetWidth - event.pageX;
 
     document.addEventListener('mousemove', handleMousemove);
     document.addEventListener('mouseup', handleMouseup);
   }
 
-  grip.addEventListener('mousedown', handleMouseDown);
-
-  node.appendChild(grip)
+  node.addEventListener('mousedown', handleMouseDown);
 
   function handleMousemove (event) {
-    node.style.width = startOffset + event.pageX + 'px';
+    parent.style.width = startOffset + event.pageX + 'px';
   }
 
   function handleMouseup (event) {
@@ -35,7 +22,7 @@ export function columnAdjust(node, headers) {
 
   return {
     destroy() {
-      grip.removeEventListener('mousedown', handleMouseDown)
+      node.removeEventListener('mousedown', handleMouseDown)
     }
   };
 }

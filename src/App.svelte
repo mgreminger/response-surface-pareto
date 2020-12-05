@@ -9,7 +9,7 @@
   ];
 </script>
 
-<EditableTable editableData={true} headers={headers} editableHeaders={false} bind:data />
+<EditableTable editableData={true} bind:headers={headers} editableHeaders={true} bind:data />
 
 <p>{headers.toString()}</p>
 
