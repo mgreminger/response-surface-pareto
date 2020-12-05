@@ -1,4 +1,6 @@
 <script>
+  import { columnAdjust } from './column_adjust';
+
   export let headers;
   export let editableHeaders = false;
   export let data = [[]];
@@ -37,7 +39,6 @@
 
 <style>
   table {
-    width: 500px;
     border-collapse: collapse;
   }
   table,
@@ -50,6 +51,7 @@
   td {
     padding: 5px;
     text-align: left;
+    width: 50px;
   }
 </style>
 
@@ -59,11 +61,13 @@
       <tr>
         {#each Array(longestRow) as _, j}
           {#if editableHeaders}
-            <th contenteditable="true" bind:textContent={headers[j]}>
+            <th contenteditable="true"
+              use:columnAdjust
+              bind:textContent={headers[j]}>
               {headers[j] ? headers[j] : ''}
             </th>
           {:else}
-            <th>{headers[j] ? headers[j] : ''}</th>
+            <th use:columnAdjust>{headers[j] ? headers[j] : ''}</th>
           {/if}
         {/each}
       </tr>

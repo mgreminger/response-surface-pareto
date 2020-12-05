@@ -9,9 +9,12 @@
   ];
 </script>
 
-<EditableTable editableData={true} headers={headers} editableHeaders={true} bind:data />
+<EditableTable editableData={true} headers={headers} editableHeaders={false} bind:data />
+
+<p>{headers.toString()}</p>
 
 {#each data as row}
   <p>{row.toString()}</p>
 {/each}
+
 
