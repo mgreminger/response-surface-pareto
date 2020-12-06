@@ -19,7 +19,7 @@
     { name: "ignore", text: "Ignore Parameter" },
   ];
 
-  let data, dataNaN, parMax, parMin;
+  let data, parMax, parMin;
 
   let dataText = [
     ["7.5", "15", "0.8779", "1270.98"],
@@ -50,14 +50,7 @@
     data = undefined;
     if (dataText.length > 0) {
       data = dataText.map((row) => row.map(parseFloat));
-      dataNaN = data.map((row) => row.map(isNaN));
-      if (
-        !data.reduce(
-          (total, row) =>
-            total && row.reduce((total, value) => total && !isNaN(value), true),
-          true
-        )
-      ) {
+      if (!data.flat().reduce((total, value) => total && !isNaN(value), true)) {
         data = undefined; // at least on entry in the table is NaN
       }
     }
