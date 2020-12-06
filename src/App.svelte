@@ -1,5 +1,6 @@
 <script>
   import EditableTable from "./EditableTable.svelte";
+  import { min, max } from "mathjs";
 
   let parameters = [
     "Material Thickness (mm)",
@@ -12,13 +13,15 @@
   let parameterOptions = [];
 
   const types = [
-    {name:undefined, text: ''},
-    {name:'input', text: 'Input Paramater'},
-    {name:'output', text: 'Output Paramater'},
-    {name:'ignore', text: 'Ignore Parameter'}
-  ]
+    { name: undefined, text: "" },
+    { name: "input", text: "Input Paramater" },
+    { name: "output", text: "Output Paramater" },
+    { name: "ignore", text: "Ignore Parameter" },
+  ];
 
-  let data = [
+  let data, dataNaN, parMax, parMin;
+
+  let dataText = [
     ["7.5", "15", "0.8779", "1270.98"],
     ["2.5", "15", "7.87986", "426.956"],
     ["7.5", "7", "1.46584", "1101.3"],
@@ -30,39 +33,65 @@
     ["5", "11", "2.94196", "793.225"],
   ];
 
-  $: parameterTypes.length = parameters.length
-  $: {
+  $: parameterTypes.length = parameters.length;
+
+  $: if (data) {
     parameterOptions.length = parameterTypes.length;
     parameterTypes.forEach((type, i) => {
-      if (type.name === 'input') {
-        parameterOptions[i] = {goal: 'minimize'};
-      } else if (type.name === 'output') {
-        parameterOptions[i] = {min: 0, max: 20};
+      if (type.name === "output") {
+        parameterOptions[i] = { goal: "minimize" };
+      } else if (type.name === "input") {
+        parameterOptions[i] = { min: parMin[i], max: parMax[i] };
       }
     });
   }
+
+  $: {
+    data = undefined;
+    if (dataText.length > 0) {
+      data = dataText.map((row) => row.map(parseFloat));
+      dataNaN = data.map((row) => row.map(isNaN));
+      if (
+        !data.reduce(
+          (total, row) =>
+            total && row.reduce((total, value) => total && !isNaN(value), true),
+          true
+        )
+      ) {
+        data = undefined; // at least on entry in the table is NaN
+      }
+    }
+  }
+
+  $: if (data) {
+    parMax = max(data, 0);
+    parMin = min(data, 0);
+  }
 </script>
 
+<style>
+</style>
+
 <EditableTable
-  bind:data 
+  bind:data={dataText}
   editableData={true}
   bind:headers={parameters}
-  editableHeaders={true}/>
+  editableHeaders={true} />
 
-{#each parameters as parameter, i}
-  <label>
-    <select bind:value={parameterTypes[i]}>
-      {#each types as type}
-        <option value={type}>
-          {type.text}
-        </option>
-      {/each}
-    </select>
-    {parameter}
-    {#if parameterTypes[i] && parameterTypes[i].name === 'input'}
-      <div>input</div>
-    {:else if parameterTypes[i] && parameterTypes[i].name === 'output'}
-      <div>output</div>
-    {/if}
-  </label>
-{/each}
+{#if data}
+  {#each parameters as parameter, i}
+    <label>
+      {parameter}
+      <select bind:value={parameterTypes[i]}>
+        {#each types as type}
+          <option value={type}>{type.text}</option>
+        {/each}
+      </select>
+      {#if parameterTypes[i] && parameterTypes[i].name === 'input'}
+        <span>input</span>
+      {:else if parameterTypes[i] && parameterTypes[i].name === 'output'}
+        <span>output</span>
+      {/if}
+    </label>
+  {/each}
+{:else}Data not defined{/if}

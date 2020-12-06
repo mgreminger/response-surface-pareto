@@ -1,5 +1,5 @@
 <script>
-  import { columnAdjust } from './column_adjust';
+  import { columnAdjust } from "./column_adjust";
 
   export let headers;
   export let editableHeaders = false;
@@ -40,6 +40,7 @@
 <style>
   table {
     border-collapse: collapse;
+    margin: 5px;
   }
   table,
   th,
@@ -54,7 +55,13 @@
     width: 50px;
   }
 
-  th {position: relative}
+  th {
+    position: relative;
+  }
+
+  td.error {
+    background-color: lightcoral;
+  }
 
   div.grip {
     top: 0;
@@ -73,15 +80,15 @@
         {#each Array(longestRow) as _, j}
           {#if editableHeaders}
             <th>
-              <div contenteditable="true"
-              bind:textContent={headers[j]}>
-              {headers[j] ? headers[j] : ''}</div>
-              <div class='grip' use:columnAdjust>&nbsp</div>
+              <div contenteditable="true" bind:textContent={headers[j]}>
+                {headers[j] ? headers[j] : ''}
+              </div>
+              <div class="grip" use:columnAdjust>&nbsp</div>
             </th>
           {:else}
             <th>
               <div>{headers[j] ? headers[j] : ''}</div>
-              <div class='grip' use:columnAdjust>&nbsp</div>
+              <div class="grip" use:columnAdjust>&nbsp</div>
             </th>
           {/if}
         {/each}
@@ -93,15 +100,19 @@
       <tr>
         {#each Array(longestRow) as _, j}
           {#if editableData}
-            <td contenteditable="true" bind:textContent={data[i][j]}>
+            <td
+              contenteditable="true"
+              bind:textContent={data[i][j]}
+              class:error={isNaN(parseFloat(data[i][j]))}>
               {data[i][j] ? data[i][j] : ''}
             </td>
           {:else}
-            <td>{data[i][j] ? data[i][j] : ''}</td>
+            <td class:error={isNaN(parseFloat(data[i][j]))}>
+              {data[i][j] ? data[i][j] : ''}
+            </td>
           {/if}
         {/each}
       </tr>
     </tbody>
   {/each}
 </table>
-
