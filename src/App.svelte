@@ -38,10 +38,25 @@
   $: if (data) {
     parameterOptions.length = parameterTypes.length;
     parameterTypes.forEach((type, i) => {
-      if (type.name === "output") {
-        parameterOptions[i] = { goal: "minimize" };
-      } else if (type.name === "input") {
-        parameterOptions[i] = { min: parMin[i], max: parMax[i] };
+      if (type) {
+        if (type.name === "output") {
+          if (
+            parameterOptions[i] === undefined ||
+            !("goal" in parameterOptions[i])
+          ) {
+            parameterOptions[i] = {
+              goal: "minimize",
+              target: (parMin[i] + parMax[i]) / 2,
+            };
+          }
+        } else if (type.name === "input") {
+          if (
+            parameterOptions[i] === undefined ||
+            !("min" in parameterOptions[i])
+          ) {
+            parameterOptions[i] = { min: parMin[i], max: parMax[i] };
+          }
+        }
       }
     });
   }
@@ -63,6 +78,9 @@
 </script>
 
 <style>
+  input.error {
+    background-color: lightcoral;
+  }
 </style>
 
 <EditableTable
@@ -74,16 +92,34 @@
 {#if data}
   {#each parameters as parameter, i}
     <label>
-      {parameter}
+      {parameter}:
       <select bind:value={parameterTypes[i]}>
         {#each types as type}
           <option value={type}>{type.text}</option>
         {/each}
       </select>
       {#if parameterTypes[i] && parameterTypes[i].name === 'input'}
-        <span>input</span>
+        <span>Lower Limit: </span>
+        <input
+          class:error={isNaN(parseFloat(parameterOptions[i].min))}
+          bind:value={parameterOptions[i].min} />
+        <span>Upper LImit: </span>
+        <input
+          class:error={isNaN(parseFloat(parameterOptions[i].max))}
+          bind:value={parameterOptions[i].max} />
       {:else if parameterTypes[i] && parameterTypes[i].name === 'output'}
-        <span>output</span>
+        <span>Goal: </span>
+        <select bind:value={parameterOptions[i].goal}>
+          <option value={'minimize'}>Minimize</option>
+          <option value={'maximize'}>Maximize</option>
+          <option value={'target'}>Target</option>
+        </select>
+        {#if parameterOptions[i].goal === 'target'}
+          <span>=</span>
+          <input
+            class:error={isNaN(parseFloat(parameterOptions[i].target))}
+            bind:value={parameterOptions[i].target} />
+        {/if}
       {/if}
     </label>
   {/each}
