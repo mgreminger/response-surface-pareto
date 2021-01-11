@@ -1,9 +1,11 @@
 <script>
+  import { onDestroy } from 'svelte';
   import EditableTable from "./EditableTable.svelte";
   import { min, max } from "mathjs";
 
   // start webworker for python calculations
   const pyodideWorker = new Worker('webworker.js')
+  onDestroy(() => pyodideWorker.terminate())
 
   let parameters = [
     "Material Thickness (mm)",
