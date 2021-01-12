@@ -38,7 +38,7 @@
 
   let data, parMax, parMin;
   let xAxisOutput, yAxisOutput;
-  let outputs;
+  let outputs = [];
 
   $: parameterTypes.length = parameters.length;
 
@@ -139,20 +139,24 @@
       {/if}
     </label>
   {/each}
-  <label>
-    x-axis output:
-    <select bind:value={yAxisOutput}>
-      {#each outputs as output}
-        <option value={output.index}>{output.text}</option>
-      {/each}
-    </select>
-  </label>
-  <label>
-    y-axis output:
-    <select bind:value={xAxisOutput}>
-      {#each outputs as output}
-        <option value={output.index}>{output.text}</option>
-      {/each}
-    </select>
-  </label>
+  {#if outputs.length >= 2}
+    <label>
+      x-axis output:
+      <select bind:value={xAxisOutput}>
+        {#each outputs as output}
+          <option value={output.index}>{output.text}</option>
+        {/each}
+      </select>
+    </label>
+    <label>
+      y-axis output:
+      <select bind:value={yAxisOutput}>
+        {#each outputs as output}
+          {#if output.index !== xAxisOutput}
+            <option value={output.index}>{output.text}</option>
+          {/if}
+        {/each}
+      </select>
+    </label>
+  {/if}
 {:else}Data not defined{/if}
