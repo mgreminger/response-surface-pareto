@@ -4,8 +4,9 @@
   import { min, max } from "mathjs";
 
   // start webworker for python calculations
-  const pyodideWorker = new Worker('webworker.js')
-  onDestroy(() => pyodideWorker.terminate())
+  const pyodideWorker = new Worker('webworker.js');
+  pyodideWorker.onmessage = handleWorkerMessage;
+  onDestroy(() => pyodideWorker.terminate());
 
   let parameters = [
     "Material Thickness (mm)",
@@ -28,6 +29,11 @@
 
   let parameterTypes = [];
   let parameterOptions = [];
+  let data, parMax, parMin;
+  let xAxisOutput, yAxisOutput;
+  let outputs = [];
+  let inputs = [];
+  let numParetoPoints = 10;
 
   const types = [
     { name: undefined, text: "" },
@@ -36,17 +42,30 @@
     { name: "ignore", text: "Ignore Parameter" },
   ];
 
-  let data, parMax, parMin;
-  let xAxisOutput, yAxisOutput;
-  let outputs = [];
+  function getParetoData(){
+    pyodideWorker.postMessage({data: data, parameterTypes: parameterTypes});
+
+  }
+
+  function handleWorkerMessage(e){
+    if (e.data === "pyodide_not_available") {
+      // pyodide didn't load properly
+      console.log('Pyodide not available for calculations')
+    } else {
+      console.log(e.data)
+    }
+  }
 
   $: parameterTypes.length = parameters.length;
 
   $: if(parameterTypes.length > 0) {
       outputs = []
+      inputs = []
       parameterTypes.forEach( (value, index) => {
         if(value.name === 'output') {
           outputs.push({index: index, text: parameters[index]})
+        } else if(value.name === 'input') {
+          inputs.push({index: index, text: parameters[index]})
         }
       })
     }
@@ -158,5 +177,11 @@
         {/each}
       </select>
     </label>
+  {/if}
+  {#if outputs.length >= 2 && inputs.length >= 1}
+    <label>
+      Number of Pareto points: <input type=number bind:value={numParetoPoints} min=3 max=100>
+    </label>
+    <button on:click={getParetoData}>Generate Pareto Data</button>
   {/if}
 {:else}Data not defined{/if}

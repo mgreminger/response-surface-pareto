@@ -1,20 +1,25 @@
 from itertools import combinations_with_replacement
 from functools import partial
 
+import json
+
 import numpy as np
 from numpy.linalg import pinv
 import nlopt
 
 def get_response_surface(data, parameter_types):
+  data = json.loads(data)
+  parameter_types = json.loads(parameter_types)
+  
   data = np.array(data)
 
   inputs = []
   outputs = []
 
   for index, parameter in enumerate(parameter_types):
-    if parameter_types['name'] == 'input':
+    if parameter['name'] == 'input':
       inputs.append(index)
-    elif parameter_types['name'] == 'output':
+    elif parameter['name'] == 'output':
       outputs.append(index)
 
   response_surfaces = []
