@@ -37,9 +37,19 @@
   ];
 
   let data, parMax, parMin;
-
+  let xAxisOutput, yAxisOutput;
+  let outputs;
 
   $: parameterTypes.length = parameters.length;
+
+  $: if(parameterTypes.length > 0) {
+      outputs = []
+      parameterTypes.forEach( (value, index) => {
+        if(value.name === 'output') {
+          outputs.push({index: index, text: parameters[index]})
+        }
+      })
+    }
 
   $: if (data) {
     parameterOptions.length = parameterTypes.length;
@@ -129,4 +139,20 @@
       {/if}
     </label>
   {/each}
+  <label>
+    x-axis output:
+    <select bind:value={yAxisOutput}>
+      {#each outputs as output}
+        <option value={output.index}>{output.text}</option>
+      {/each}
+    </select>
+  </label>
+  <label>
+    y-axis output:
+    <select bind:value={xAxisOutput}>
+      {#each outputs as output}
+        <option value={output.index}>{output.text}</option>
+      {/each}
+    </select>
+  </label>
 {:else}Data not defined{/if}
