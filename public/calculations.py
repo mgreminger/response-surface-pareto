@@ -27,14 +27,14 @@ def get_response_surface(data, parameter_types):
   terms = list(combinations_with_replacement(inputs, 1))
   terms.extend(combinations_with_replacement(inputs, 2))
   
-  for current_input in inputs:
+  for current_output in outputs:
     A = np.ones( (data.shape[0], len(terms) + 1) )
     rhs = np.zeros( data.shape[0] )
 
     for i,row in enumerate(data):
-      rhs[i] = row[current_input]
+      rhs[i] = row[current_output]
       for j,term in enumerate(terms):
-        A[i,j+1] = row.take(term[0]).prod()
+        A[i,j+1] = row.take(term).prod()
 
     response_surfaces.append(pinv(A)@rhs)
 
