@@ -23,8 +23,9 @@ onmessage = async function(e){
     return;
   }
 
-  result = self.py_funcs.get_response_surface(JSON.stringify(e.data.data),
-                                              JSON.stringify(e.data.parameterTypes));
+  result = self.py_funcs.getParetoPoints(JSON.stringify(e.data.data),
+                                         JSON.stringify(e.data.parameterTypes),
+                                         JSON.stringify(e.data.parameterOptions));
 
   postMessage(result);
 }
