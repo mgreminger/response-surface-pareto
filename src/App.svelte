@@ -50,7 +50,7 @@
   function handleWorkerMessage(e){
     if (e.data === "pyodide_not_available") {
       // pyodide didn't load properly
-      console.log('Pyodide not available for calculations')
+      console.error('Pyodide not available for calculations')
     } else {
       console.log(e.data)
     }

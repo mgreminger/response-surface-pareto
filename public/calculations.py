@@ -38,29 +38,29 @@ def get_response_surface(data, parameter_types):
 
     response_surfaces.append(pinv(A)@rhs)
 
-  term_indices = list(combinations_with_replacement(range(len(inputs)), 1))
-  term_indices.extend(combinations_with_replacement(range(len(inputs)), 2))  
+  term_indices_list = list(combinations_with_replacement(range(len(inputs)), 1))
+  term_indices_list.extend(combinations_with_replacement(range(len(inputs)), 2))  
 
   # first coefficient is the constant coefficient
-  return term_indices, response_surfaces
+  return term_indices_list, response_surfaces
 
 
-def evaluate_response_surface(term_indices, rs_coefficients, x, grad=None, offset=0.0):
-  terms = np.array.ones(len(term_indices)+1)
-  grad_terms = np.array.zeros( (len(x), len(term_indices)+1) )
+def evaluate_response_surface(term_indices_list, rs_coefficients, x, grad=None, offset=0.0):
+  terms = np.array.ones(len(term_indices_list)+1)
+  grad_terms = np.array.zeros( (len(x), len(term_indices_list)+1) )
 
-  for i, term in enumerate(term_indices):
-    terms[i+1] = x.take(term).prod()
+  for i, term_indices in enumerate(term_indices_list):
+    terms[i+1] = x.take(term_indices).prod()
     for j in range(len(x)):
-      if len(term) == 1 and term[0] == j:
+      if len(term_indices) == 1 and term_indices[0] == j:
         grad_terms[i, j+1] = 1
-      if len(term) == 2:
-        if term[0] == j and term[1] == j:
+      if len(term_indices) == 2:
+        if term_indices[0] == j and term_indices[1] == j:
           grad_terms[i, j+1] = 2.0*x[j]
-        elif term[0] == j:
-          grad_terms[i, j+1] = x[term[1]]
-        elif term[1] == j:
-          grad_terms[i, j+1] = x[term[0]]
+        elif term_indices[0] == j:
+          grad_terms[i, j+1] = x[term_indices[1]]
+        elif term_indices[1] == j:
+          grad_terms[i, j+1] = x[term_indices[0]]
 
   if grad and grad.size > 0:
     grad[:] = grad_terms.dot(rs_coefficients)
