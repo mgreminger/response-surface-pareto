@@ -36,7 +36,7 @@
   let numParetoPoints = 10;
 
   const types = [
-    { name: undefined, text: "" },
+    { name: "", text: "" },
     { name: "input", text: "Input Paramater" },
     { name: "output", text: "Output Paramater" },
     { name: "ignore", text: "Ignore Parameter" },
@@ -62,9 +62,9 @@
       outputs = []
       inputs = []
       parameterTypes.forEach( (value, index) => {
-        if(value.name === 'output') {
+        if(value === 'output') {
           outputs.push({index: index, text: parameters[index]})
-        } else if(value.name === 'input') {
+        } else if(value === 'input') {
           inputs.push({index: index, text: parameters[index]})
         }
       })
@@ -74,7 +74,7 @@
     parameterOptions.length = parameterTypes.length;
     parameterTypes.forEach((type, i) => {
       if (type) {
-        if (type.name === "output") {
+        if (type === "output") {
           if (
             parameterOptions[i] === undefined ||
             !("goal" in parameterOptions[i])
@@ -84,7 +84,7 @@
               target: (parMin[i] + parMax[i]) / 2,
             };
           }
-        } else if (type.name === "input") {
+        } else if (type === "input") {
           if (
             parameterOptions[i] === undefined ||
             !("min" in parameterOptions[i])
@@ -130,10 +130,10 @@
       {parameter}:
       <select bind:value={parameterTypes[i]}>
         {#each types as type}
-          <option value={type}>{type.text}</option>
+          <option value={type.name}>{type.text}</option>
         {/each}
       </select>
-      {#if parameterTypes[i] && parameterTypes[i].name === 'input'}
+      {#if parameterTypes[i] && parameterTypes[i] === 'input'}
         <span>Lower Limit: </span>
         <input
           class:error={isNaN(parseFloat(parameterOptions[i].min))}
@@ -142,7 +142,7 @@
         <input
           class:error={isNaN(parseFloat(parameterOptions[i].max))}
           bind:value={parameterOptions[i].max} />
-      {:else if parameterTypes[i] && parameterTypes[i].name === 'output'}
+      {:else if parameterTypes[i] && parameterTypes[i] === 'output'}
         <span>Goal: </span>
         <select bind:value={parameterOptions[i].goal}>
           <option value={'minimize'}>Minimize</option>

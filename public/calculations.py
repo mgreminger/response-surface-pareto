@@ -17,9 +17,9 @@ def get_response_surface(data, parameter_types):
   outputs = []
 
   for index, parameter in enumerate(parameter_types):
-    if parameter['name'] == 'input':
+    if parameter == 'input':
       inputs.append(index)
-    elif parameter['name'] == 'output':
+    elif parameter == 'output':
       outputs.append(index)
 
   response_surfaces = []
