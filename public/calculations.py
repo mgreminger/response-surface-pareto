@@ -8,8 +8,6 @@ from numpy.linalg import pinv
 import nlopt
 
 def _get_response_surface(data, parameter_types):
-  data = np.array(data)
-
   inputs = []
   outputs = []
 
@@ -39,7 +37,7 @@ def _get_response_surface(data, parameter_types):
   term_indices_list.extend(combinations_with_replacement(range(len(inputs)), 2))  
 
   # first coefficient is the constant coefficient
-  return term_indices_list, response_surfaces
+  return inputs, outputs, term_indices_list, response_surfaces
 
 
 def _evaluate_response_surface(term_indices_list, rs_coefficients, x, grad=None, offset=0.0):
@@ -66,19 +64,19 @@ def _evaluate_response_surface(term_indices_list, rs_coefficients, x, grad=None,
 
 
 def get_pareto_points(data, parameter_types, parameter_options):
-  data = json.loads(data)
+  data = np.array(json.loads(data))
   parameter_types = json.loads(parameter_types)
   parameter_options = json.loads(parameter_options)
 
   # first need to define response surfaces
-  term_indices_list, rs_coefficients = _get_response_surface(data, parameter_types)
+  inputs, outputs, term_indices_list, rs_coefficients = _get_response_surface(data, parameter_types)
 
   # Now get the pareto points
-  return _get_pareto_points(data, parameter_types, parameter_options,
+  return _get_pareto_points(data, inputs, outputs, parameter_options,
                             term_indices_list, rs_coefficients)
 
-def _get_pareto_points(data, parameter_types, parameter_options, term_indices_list, rs_coefficients):
-  opt = nlopt.opt(nlopt.LD_SLSQP, 2)
+def _get_pareto_points(data, inputs, outputs, parameter_options, term_indices_list, rs_coefficients):
+  opt = nlopt.opt(nlopt.LD_SLSQP, len(inputs))
   opt.set_min_objective(partial(_evaluate_response_surface, term_indices_list, rs_coefficients[0]))
 
   opt.set_lower_bounds(np.array([2.5, 7]))
@@ -94,7 +92,7 @@ def _get_pareto_points(data, parameter_types, parameter_options, term_indices_li
 
   xopt = opt.optimize(x0)
 
-  return xopt
+  return json.dumps(xopt.tolist())
 
 class FuncContainer(object): pass
 py_funcs = FuncContainer()

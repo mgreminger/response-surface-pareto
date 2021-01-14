@@ -85,6 +85,8 @@
               target: (parMin[i] + parMax[i]) / 2,
             };
           }
+          parameterOptions[i].x_axis = (i === xAxisOutput) ? true : false
+          parameterOptions[i].y_axis = (i === yAxisOutput) ? true : false
         } else if (type === "input") {
           if (
             parameterOptions[i] === undefined ||
