@@ -76,6 +76,7 @@ def get_pareto_points(data, parameters, parameter_types, parameter_options):
   return _get_pareto_points(data, inputs, outputs, parameter_options,
                             term_indices_list, rs_coefficients)
 
+
 def _get_pareto_points(data, inputs, outputs, parameter_options, term_indices_list, rs_coefficients):
   opt = nlopt.opt(nlopt.LD_SLSQP, len(inputs))
   opt.set_min_objective(partial(_evaluate_response_surface, term_indices_list, rs_coefficients[0]))

@@ -43,7 +43,7 @@
   ];
 
   function getParetoData(){
-    pyodideWorker.postMessage({data, parameterTypes, parameters, parameterOptions});
+    pyodideWorker.postMessage([data, parameters, parameterTypes, parameterOptions]);
 
   }
 
