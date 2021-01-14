@@ -24,6 +24,7 @@ onmessage = async function(e){
   }
 
   result = self.py_funcs.getParetoPoints(JSON.stringify(e.data.data),
+                                         JSON.stringify(e.data.parameters),
                                          JSON.stringify(e.data.parameterTypes),
                                          JSON.stringify(e.data.parameterOptions));
 

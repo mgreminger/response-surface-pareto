@@ -63,8 +63,9 @@ def _evaluate_response_surface(term_indices_list, rs_coefficients, x, grad=None,
   return terms.dot(rs_coefficients) + offset
 
 
-def get_pareto_points(data, parameter_types, parameter_options):
+def get_pareto_points(data, parameters, parameter_types, parameter_options):
   data = np.array(json.loads(data))
+  parameters = json.loads(parameters)
   parameter_types = json.loads(parameter_types)
   parameter_options = json.loads(parameter_options)
 

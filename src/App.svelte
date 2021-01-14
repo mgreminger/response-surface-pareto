@@ -31,7 +31,7 @@
   let parameterOptions = [];
   let data, parMax, parMin;
   let xAxisOutput, yAxisOutput;
-  let outputs = [];
+  let nonTargetOutputs = [];
   let inputs = [];
   let numParetoPoints = 10;
 
@@ -43,8 +43,7 @@
   ];
 
   function getParetoData(){
-    pyodideWorker.postMessage({data: data, parameterTypes: parameterTypes,
-                               parameterOptions: parameterOptions});
+    pyodideWorker.postMessage({data, parameterTypes, parameters, parameterOptions});
 
   }
 
@@ -60,11 +59,11 @@
   $: parameterTypes.length = parameters.length;
 
   $: if(parameterTypes.length > 0) {
-      outputs = []
+      nonTargetOutputs = []
       inputs = []
       parameterTypes.forEach( (value, index) => {
-        if(value === 'output') {
-          outputs.push({index: index, text: parameters[index]})
+        if(value === 'output' && parameterOptions[index].goal !== 'target') {
+          nonTargetOutputs.push({index: index, text: parameters[index]})
         } else if(value === 'input') {
           inputs.push({index: index, text: parameters[index]})
         }
@@ -161,11 +160,11 @@
       {/if}
     </label>
   {/each}
-  {#if outputs.length >= 2}
+  {#if nonTargetOutputs.length >= 2}
     <label>
       x-axis output:
       <select bind:value={xAxisOutput}>
-        {#each outputs as output}
+        {#each nonTargetOutputs as output}
           <option value={output.index}>{output.text}</option>
         {/each}
       </select>
@@ -173,7 +172,7 @@
     <label>
       y-axis output:
       <select bind:value={yAxisOutput}>
-        {#each outputs as output}
+        {#each nonTargetOutputs as output}
           {#if output.index !== xAxisOutput}
             <option value={output.index}>{output.text}</option>
           {/if}
@@ -181,7 +180,7 @@
       </select>
     </label>
   {/if}
-  {#if outputs.length >= 2 && inputs.length >= 1}
+  {#if nonTargetOutputs.length >= 2 && inputs.length >= 1}
     <label>
       Number of Pareto points: <input type=number bind:value={numParetoPoints} min=3 max=100>
     </label>
