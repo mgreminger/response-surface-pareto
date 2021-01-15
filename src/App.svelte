@@ -1,6 +1,7 @@
 <script>
   import { onDestroy } from 'svelte';
   import EditableTable from "./EditableTable.svelte";
+  import ParetoPlot from "./ParetoPlot.svelte";
   import { min, max } from "mathjs";
 
   // start webworker for python calculations
@@ -188,5 +189,6 @@
       Number of Pareto points: <input type=number bind:value={numParetoPoints} min=3 max=100>
     </label>
     <button on:click={getParetoData}>Generate Pareto Data</button>
+    <ParetoPlot></ParetoPlot>
   {/if}
 {:else}Data not defined{/if}
