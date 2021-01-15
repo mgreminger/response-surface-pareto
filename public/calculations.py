@@ -116,12 +116,38 @@ def _get_pareto_points(data, inputs, outputs, num_pareto_points,
   input_mins = np.array(input_mins)
   input_maxes = np.array(input_maxes)
 
-  x_targets = np.linspace(data[:,outputs[x_axis_output]].min(),
-                          data[:,outputs[x_axis_output]].max(), num_pareto_points)
+  x_start = 0.5*(input_mins+input_maxes) # set a starting point at center of all input values
+
+  # find the max and min possible x-axis values given the input variable range constraints
+  opt = nlopt.opt(nlopt.LD_SLSQP, len(inputs))
+  opt.set_min_objective(partial(_evaluate_response_surface, term_indices_list,
+                                rs_coefficients[x_axis_output]))
+  opt.set_lower_bounds(input_mins)
+  opt.set_upper_bounds(input_maxes)
+  opt.set_ftol_rel(1.0e-8)
+
+  # find xmin
+  try:
+    xopt = opt.optimize(x_start)
+  except nlopt.RoundoffLimited as e:
+    pass # further progress limited due to round-off error, usually is converged with this condition
+  xmin = _evaluate_response_surface(term_indices_list, rs_coefficients[x_axis_output], xopt)
+
+  opt.set_max_objective(partial(_evaluate_response_surface, term_indices_list,
+                                rs_coefficients[x_axis_output]))
+
+  # find xmax
+  try:
+    xopt = opt.optimize(x_start)
+  except nlopt.RoundoffLimited as e:
+    pass # further progress limited due to round-off error, usually is converged with this condition
+  xmax = _evaluate_response_surface(term_indices_list, rs_coefficients[x_axis_output], xopt)
+
+  x_targets = np.linspace(xmin, xmax, num_pareto_points)
+  print('x_targets = ', x_targets)
 
   pareto_designs = []
 
-  xopt_prev = 0.5*(input_mins+input_maxes) # set a starting point for first optimization
   for x_target in x_targets:
     opt = nlopt.opt(nlopt.LD_SLSQP, len(inputs))
 
@@ -149,11 +175,12 @@ def _get_pareto_points(data, inputs, outputs, num_pareto_points,
     opt.set_lower_bounds(input_mins)
     opt.set_upper_bounds(input_maxes)
 
-    opt.set_ftol_rel(1.0e-4)
+    opt.set_ftol_rel(1.0e-8)
 
-    x0 = np.array(xopt_prev)
-
-    xopt = opt.optimize(x0)
+    try:
+      xopt = opt.optimize(x_start)
+    except nlopt.RoundoffLimited as e:
+      pass # further progress limited due to round-off error, usually is converged with this condition
 
     opt_outputs = []
     for i, output in enumerate(outputs):
@@ -161,8 +188,6 @@ def _get_pareto_points(data, inputs, outputs, num_pareto_points,
 
     pareto_designs.append(np.hstack((xopt, np.array(opt_outputs))).tolist())
 
-    xopt_prev = xopt
-    
   return pareto_designs
 
 class FuncContainer(object): pass
