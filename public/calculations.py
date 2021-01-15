@@ -40,7 +40,8 @@ def _get_response_surface(data, parameter_types):
   return inputs, outputs, term_indices_list, response_surfaces
 
 
-def _evaluate_response_surface(term_indices_list, rs_coefficients, x, grad=None, offset=0.0):
+def _evaluate_response_surface(term_indices_list, rs_coefficients, x, grad=None, offset=0.0,
+                               factor=1.0):
   terms = np.ones(len(term_indices_list)+1)
   grad_terms = np.zeros( (len(x), len(term_indices_list)+1) )
 
@@ -60,10 +61,10 @@ def _evaluate_response_surface(term_indices_list, rs_coefficients, x, grad=None,
   if grad is not None and grad.size > 0:
     grad[:] = grad_terms.dot(rs_coefficients)
 
-  return terms.dot(rs_coefficients) + offset
+  return factor*(terms.dot(rs_coefficients) + offset)
 
 
-def get_pareto_points(data, parameters, parameter_types, parameter_options):
+def get_pareto_points(data, parameters, parameter_types, parameter_options, num_pareto_points):
   data = np.array(json.loads(data))
   parameters = json.loads(parameters)
   parameter_types = json.loads(parameter_types)
@@ -73,28 +74,96 @@ def get_pareto_points(data, parameters, parameter_types, parameter_options):
   inputs, outputs, term_indices_list, rs_coefficients = _get_response_surface(data, parameter_types)
 
   # Now get the pareto points
-  return _get_pareto_points(data, inputs, outputs, parameter_options,
-                            term_indices_list, rs_coefficients)
+  return json.dumps(_get_pareto_points(data, inputs, outputs, num_pareto_points, parameter_options,
+                                       term_indices_list, rs_coefficients))
 
 
-def _get_pareto_points(data, inputs, outputs, parameter_options, term_indices_list, rs_coefficients):
-  opt = nlopt.opt(nlopt.LD_SLSQP, len(inputs))
-  opt.set_min_objective(partial(_evaluate_response_surface, term_indices_list, rs_coefficients[0]))
+def _get_pareto_points(data, inputs, outputs, num_pareto_points,
+                       parameter_options, term_indices_list, rs_coefficients):
+  x_axis_output = None
+  y_axis_output = None
+  target_outputs = []
 
-  opt.set_lower_bounds(np.array([2.5, 7]))
-  opt.set_upper_bounds(np.array([7.5, 15]))
+  for i, output in enumerate(outputs):
+    if parameter_options[output]['x_axis']:
+      if x_axis_output is None:
+        x_axis_output = i
+        x_axis_goal = parameter_options[output]['goal']
+      else:
+        raise ValueError("Only one x-axis output can be defined.")
+    elif parameter_options[output]['y_axis']:
+      if y_axis_output is None:
+        y_axis_output = i
+        y_axis_goal = parameter_options[output]['goal']
+      else:
+        raise ValueError("Only one y-axis output can be defined.")
+    elif parameter_options[output]['goal'] == 'target':
+      target_outputs.append(i)
 
-  opt.add_inequality_constraint(partial(_evaluate_response_surface,
-                                        term_indices_list, rs_coefficients[1],
-                                        offset=-468.897287036862))
+  if x_axis_output is None or y_axis_output is None:
+    raise ValueError("One x-axis and one y-axis output need to be defined.")
 
-  opt.set_ftol_rel(1.0e-6)
+  input_mins = []
+  input_maxes = []
 
-  x0 = np.array([5, 11])
+  for input in inputs:
+    input_mins.append(parameter_options[input]['min'])
+    input_maxes.append(parameter_options[input]['max'])
 
-  xopt = opt.optimize(x0)
+  if len(input_mins) == 0:
+    raise ValueError("There must be at least one input parameter defined.")
 
-  return json.dumps(xopt.tolist())
+  input_mins = np.array(input_mins)
+  input_maxes = np.array(input_maxes)
+
+  x_targets = np.linspace(data[:,outputs[x_axis_output]].min(),
+                          data[:,outputs[x_axis_output]].max(), num_pareto_points)
+
+  pareto_designs = []
+
+  xopt_prev = 0.5*(input_mins+input_maxes) # set a starting point for first optimization
+  for x_target in x_targets:
+    opt = nlopt.opt(nlopt.LD_SLSQP, len(inputs))
+
+    if y_axis_goal == "minimize":
+      opt.set_min_objective(partial(_evaluate_response_surface, term_indices_list,
+                                    rs_coefficients[y_axis_output]))
+    else:
+      opt.set_max_objective(partial(_evaluate_response_surface, term_indices_list,
+                                    rs_coefficients[y_axis_output]))
+
+    if x_axis_goal == "minimize":
+      opt.add_inequality_constraint(partial(_evaluate_response_surface,
+                                            term_indices_list, rs_coefficients[x_axis_output],
+                                            offset=-x_target))
+    else:
+      opt.add_inequality_constraint(partial(_evaluate_response_surface,
+                                            term_indices_list, rs_coefficients[x_axis_output],
+                                            offset=-x_target, factor=-1.0))
+
+    for target_output in target_outputs:
+      opt.add_equality_constraintartial(_evaluate_response_surface,
+                                        term_indices_list, rs_coefficients[target_output],
+                                        offset=-parameter_options[outputs[target_output]]['target'])
+
+    opt.set_lower_bounds(input_mins)
+    opt.set_upper_bounds(input_maxes)
+
+    opt.set_ftol_rel(1.0e-4)
+
+    x0 = np.array(xopt_prev)
+
+    xopt = opt.optimize(x0)
+
+    opt_outputs = []
+    for i, output in enumerate(outputs):
+      opt_outputs.append(_evaluate_response_surface(term_indices_list, rs_coefficients[i], xopt))
+
+    pareto_designs.append(np.hstack((xopt, np.array(opt_outputs))).tolist())
+
+    xopt_prev = xopt
+    
+  return pareto_designs
 
 class FuncContainer(object): pass
 py_funcs = FuncContainer()
