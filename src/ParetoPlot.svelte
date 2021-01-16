@@ -1,17 +1,22 @@
 <script>
 	
-  let plot
+  export let plotData = null;
   
-  function createPlot(){
-    Plotly.newPlot( plot, [{
-    x: [1, 2, 3, 4, 5],
-    y: [1, 2, 4, 8, 16] }], {
-    margin: { t: 0 } } );
+  let plotElement;
+  let plot = null;
+
+  $: if(plotData) {
+    if(!plot){
+      Plotly.newPlot( plotElement, plotData.data, plotData.layout);
+    } else {
+      Plotly.react( plotElement, plotData.data, plotData.layout)
+    }
   }
+
 </script>
 
 <svelte:head>
-  <script src="plotly/plotly-latest.min.js" on:load={createPlot}></script>
+  <script src="plotly/plotly-latest.min.js"></script>
 </svelte:head>
 
-<div bind:this={plot} style="width:600px;height:250px;"></div>
+<div bind:this={plotElement} style="width:800px;height:600px;"></div>

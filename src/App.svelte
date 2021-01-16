@@ -37,6 +37,7 @@
   let inputs = [];
   let numParetoPoints = 10;
   let fullyDefined = false;
+  let plotData = null;
 
   const types = [
     { name: "", text: "" },
@@ -47,7 +48,6 @@
 
   function getParetoData(){
     pyodideWorker.postMessage([data, parameters, parameterTypes, parameterOptions, numParetoPoints]);
-
   }
 
   function handleWorkerMessage(e){
@@ -55,7 +55,8 @@
       // pyodide didn't load properly
       console.error('Pyodide not available for calculations')
     } else {
-      console.log(e.data)
+      plotData = e.data;
+      console.log(e.data);
     }
   }
 
@@ -118,6 +119,10 @@
 
   $: fullyDefined = nonTargetOutputs.length >= 3 && inputs.length >= 1 && xAxisOutput !== null && 
                     yAxisOutput !== null && xAxisOutput !== yAxisOutput;
+
+$: if(!fullyDefined) {
+  plotData = null;
+}
 </script>
 
 <style>
@@ -189,6 +194,6 @@
       Number of Pareto points: <input type=number bind:value={numParetoPoints} min=3 max=100>
     </label>
     <button on:click={getParetoData}>Generate Pareto Data</button>
-    <ParetoPlot></ParetoPlot>
+    <ParetoPlot bind:plotData></ParetoPlot>
   {/if}
 {:else}Data not defined{/if}

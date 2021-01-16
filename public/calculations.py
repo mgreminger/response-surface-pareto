@@ -74,8 +74,41 @@ def get_pareto_points(data, parameters, parameter_types, parameter_options, num_
   inputs, outputs, term_indices_list, rs_coefficients = _get_response_surface(data, parameter_types)
 
   # Now get the pareto points
-  return json.dumps(_get_pareto_points(data, inputs, outputs, num_pareto_points, parameter_options,
-                                       term_indices_list, rs_coefficients))
+  x_axis_output, y_axis_output, pareto_data = _get_pareto_points(data, inputs, outputs, 
+                                                                 num_pareto_points, parameter_options,
+                                                                 term_indices_list, rs_coefficients)
+
+  pareto_line = {
+    'x': pareto_data[:,len(inputs)+x_axis_output].tolist(),
+    'y': pareto_data[:,len(inputs)+y_axis_output].tolist(),
+    'name': 'Pareto Points',
+    'type': 'scatter',
+    'mode': 'lines+markers'
+  }
+
+  original_points = {
+    'x': data[:,outputs[x_axis_output]].tolist(),
+    'y': data[:,outputs[y_axis_output]].tolist(),
+    'name': 'Input Points',
+    'type': 'scatter',
+    'mode': 'markers'
+  }
+
+  layout = {
+    'xaxis': {
+      'title': parameters[outputs[x_axis_output]]
+    },
+    'yaxis':{
+      'title': parameters[outputs[y_axis_output]]
+    }
+  }
+
+  plot = {
+    'data':[pareto_line, original_points],
+    'layout':layout 
+  }
+
+  return json.dumps(plot)
 
 
 def _get_pareto_points(data, inputs, outputs, num_pareto_points,
@@ -146,7 +179,7 @@ def _get_pareto_points(data, inputs, outputs, num_pareto_points,
   x_targets = np.linspace(xmin, xmax, num_pareto_points)
   print('x_targets = ', x_targets)
 
-  pareto_designs = []
+  pareto_designs = None
 
   for x_target in x_targets:
     opt = nlopt.opt(nlopt.LD_SLSQP, len(inputs))
@@ -186,9 +219,13 @@ def _get_pareto_points(data, inputs, outputs, num_pareto_points,
     for i, output in enumerate(outputs):
       opt_outputs.append(_evaluate_response_surface(term_indices_list, rs_coefficients[i], xopt))
 
-    pareto_designs.append(np.hstack((xopt, np.array(opt_outputs))).tolist())
+    if pareto_designs is None:
+      pareto_designs = np.hstack((xopt, np.array(opt_outputs)))
+    else:
+      pareto_designs = np.vstack((pareto_designs, np.hstack((xopt, np.array(opt_outputs)))))
 
-  return pareto_designs
+
+  return x_axis_output, y_axis_output, pareto_designs
 
 class FuncContainer(object): pass
 py_funcs = FuncContainer()
