@@ -1,7 +1,7 @@
 <script>
   import { onDestroy } from 'svelte';
   import EditableTable from "./EditableTable.svelte";
-  import ParetoPlot from "./ParetoPlot.svelte";
+  import Plot from "./Plot.svelte";
   import { min, max } from "mathjs";
 
   // start webworker for python calculations
@@ -56,7 +56,6 @@
       console.error('Pyodide not available for calculations')
     } else {
       plotData = e.data;
-      console.log(e.data);
     }
   }
 
@@ -194,6 +193,6 @@ $: if(!fullyDefined) {
       Number of Pareto points: <input type=number bind:value={numParetoPoints} min=3 max=100>
     </label>
     <button on:click={getParetoData}>Generate Pareto Data</button>
-    <ParetoPlot bind:plotData></ParetoPlot>
+    <Plot plotData={plotData}></Plot>
   {/if}
 {:else}Data not defined{/if}

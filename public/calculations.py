@@ -39,9 +39,17 @@ def _get_response_surface(data, parameter_types):
   # first coefficient is the constant coefficient
   return inputs, outputs, term_indices_list, response_surfaces
 
-
+x_prev = None
+x_current = None
 def _evaluate_response_surface(term_indices_list, rs_coefficients, x, grad=None, offset=0.0,
                                factor=1.0):
+  global x_prev, x_current
+
+  x_prev = x_current
+  if x_prev is None:
+    x_prev = x
+  x_current = x
+
   terms = np.ones(len(term_indices_list)+1)
   grad_terms = np.zeros( (len(x), len(term_indices_list)+1) )
 
@@ -59,7 +67,7 @@ def _evaluate_response_surface(term_indices_list, rs_coefficients, x, grad=None,
           grad_terms[j, i+1] = x[term_indices[0]]
 
   if grad is not None and grad.size > 0:
-    grad[:] = grad_terms.dot(rs_coefficients)
+    grad[:] = factor*grad_terms.dot(rs_coefficients)
 
   return factor*(terms.dot(rs_coefficients) + offset)
 
@@ -113,6 +121,9 @@ def get_pareto_points(data, parameters, parameter_types, parameter_options, num_
 
 def _get_pareto_points(data, inputs, outputs, num_pareto_points,
                        parameter_options, term_indices_list, rs_coefficients):
+
+  global x_prev
+  
   x_axis_output = None
   y_axis_output = None
   target_outputs = []
@@ -163,7 +174,10 @@ def _get_pareto_points(data, inputs, outputs, num_pareto_points,
   try:
     xopt = opt.optimize(x_start)
   except nlopt.RoundoffLimited as e:
-    pass # further progress limited due to round-off error, usually is converged with this condition
+    print('round off limited, using previous iteration')
+    xopt = x_prev
+  except Exception as e:
+    print('nlopt error getting xmin:', e)
   xmin = _evaluate_response_surface(term_indices_list, rs_coefficients[x_axis_output], xopt)
 
   opt.set_max_objective(partial(_evaluate_response_surface, term_indices_list,
@@ -173,23 +187,40 @@ def _get_pareto_points(data, inputs, outputs, num_pareto_points,
   try:
     xopt = opt.optimize(x_start)
   except nlopt.RoundoffLimited as e:
-    pass # further progress limited due to round-off error, usually is converged with this condition
+    print('round off limited, using previous iteration')
+    xopt = x_prev
+  except Exception as e:
+    print('nlopt error getting xmax:', e)
   xmax = _evaluate_response_surface(term_indices_list, rs_coefficients[x_axis_output], xopt)
 
   x_targets = np.linspace(xmin, xmax, num_pareto_points)
-  print('x_targets = ', x_targets)
 
   pareto_designs = None
 
-  for x_target in x_targets:
-    opt = nlopt.opt(nlopt.LD_SLSQP, len(inputs))
+  opt = nlopt.opt(nlopt.LD_SLSQP, len(inputs))
+  # opt = nlopt.opt(nlopt.GN_ISRES, len(inputs))
 
-    if y_axis_goal == "minimize":
-      opt.set_min_objective(partial(_evaluate_response_surface, term_indices_list,
-                                    rs_coefficients[y_axis_output]))
-    else:
-      opt.set_max_objective(partial(_evaluate_response_surface, term_indices_list,
-                                    rs_coefficients[y_axis_output]))
+  if y_axis_goal == "minimize":
+    opt.set_min_objective(partial(_evaluate_response_surface, term_indices_list,
+                                  rs_coefficients[y_axis_output]))
+  else:
+    opt.set_max_objective(partial(_evaluate_response_surface, term_indices_list,
+                                  rs_coefficients[y_axis_output]))
+
+  for target_output in target_outputs:
+    opt.add_equality_constraint(_evaluate_response_surface,
+                                term_indices_list, rs_coefficients[target_output],
+                                offset=-parameter_options[outputs[target_output]]['target'])
+
+  opt.set_lower_bounds(input_mins)
+  opt.set_upper_bounds(input_maxes)
+
+  opt.set_ftol_rel(1.0e-8)
+  # opt.set_xtol_rel(1.0e-12)
+  # opt.set_maxeval(100)
+
+  for x_target in x_targets:
+    opt.remove_inequality_constraints()
 
     if x_axis_goal == "minimize":
       opt.add_inequality_constraint(partial(_evaluate_response_surface,
@@ -200,20 +231,14 @@ def _get_pareto_points(data, inputs, outputs, num_pareto_points,
                                             term_indices_list, rs_coefficients[x_axis_output],
                                             offset=-x_target, factor=-1.0))
 
-    for target_output in target_outputs:
-      opt.add_equality_constraintartial(_evaluate_response_surface,
-                                        term_indices_list, rs_coefficients[target_output],
-                                        offset=-parameter_options[outputs[target_output]]['target'])
-
-    opt.set_lower_bounds(input_mins)
-    opt.set_upper_bounds(input_maxes)
-
-    opt.set_ftol_rel(1.0e-8)
-
     try:
       xopt = opt.optimize(x_start)
     except nlopt.RoundoffLimited as e:
-      pass # further progress limited due to round-off error, usually is converged with this condition
+      print('round off limited, using previous iteration')
+      xopt = x_start
+    except Exception as e:
+      print('nlopt error getting pareto point:', e)
+      xopt = x_start
 
     opt_outputs = []
     for i, output in enumerate(outputs):
@@ -224,6 +249,23 @@ def _get_pareto_points(data, inputs, outputs, num_pareto_points,
     else:
       pareto_designs = np.vstack((pareto_designs, np.hstack((xopt, np.array(opt_outputs)))))
 
+    # gradient checking code, ideally should be made into a test
+    # for i in range(10):
+    #   grad = np.zeros(len(inputs))
+    #   point = np.random.uniform(low=2.0, high=15.0, size=len(inputs))
+    #   value = _evaluate_response_surface(term_indices_list, rs_coefficients[0], point, offset=150.0, grad=grad, factor=-1.0)
+
+    #   fd_grad = np.zeros(len(inputs))
+    #   h = 1e-6
+    #   for i in range(len(inputs)):
+    #     delta = np.zeros(len(inputs))
+    #     delta[i] = h
+    #     fd_grad[i] = (_evaluate_response_surface(term_indices_list, rs_coefficients[0], point+delta, offset=150.0, factor=-1.0)-
+    #                   _evaluate_response_surface(term_indices_list, rs_coefficients[0], point-delta, offset=150.0, factor=-1.0))/(2*h)
+
+    #   print('analytical grad:',grad)
+    #   print('fd grad:', fd_grad)
+    #   print('difference', np.linalg.norm(fd_grad-grad))
 
   return x_axis_output, y_axis_output, pareto_designs
 
