@@ -210,7 +210,7 @@ def _get_pareto_points(data, inputs, outputs, num_pareto_points,
 
   # opt.set_ftol_rel(1.0e-12)
   # opt.set_xtol_rel(1.0e-12)
-  opt_global.set_maxeval(1000)
+  opt_global.set_maxeval(500)
 
   for x_target in x_targets:
     opt.remove_inequality_constraints()
