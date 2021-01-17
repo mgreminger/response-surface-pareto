@@ -39,32 +39,27 @@ def _get_response_surface(data, parameter_types):
   # first coefficient is the constant coefficient
   return inputs, outputs, term_indices_list, response_surfaces
 
-x_prev = None
-x_current = None
+
 def _evaluate_response_surface(term_indices_list, rs_coefficients, x, grad=None, offset=0.0,
                                factor=1.0):
-  global x_prev, x_current
-
-  x_prev = x_current
-  if x_prev is None:
-    x_prev = x
-  x_current = x
 
   terms = np.ones(len(term_indices_list)+1)
-  grad_terms = np.zeros( (len(x), len(term_indices_list)+1) )
+  if grad is not None and grad.size > 0:
+    grad_terms = np.zeros( (len(x), len(term_indices_list)+1) )
 
   for i, term_indices in enumerate(term_indices_list):
     terms[i+1] = x.take(term_indices).prod()
-    for j in range(len(x)):
-      if len(term_indices) == 1 and term_indices[0] == j:
-        grad_terms[j, i+1] = 1
-      if len(term_indices) == 2:
-        if term_indices[0] == j and term_indices[1] == j:
-          grad_terms[j, i+1] = 2.0*x[j]
-        elif term_indices[0] == j:
-          grad_terms[j, i+1] = x[term_indices[1]]
-        elif term_indices[1] == j:
-          grad_terms[j, i+1] = x[term_indices[0]]
+    if grad is not None and grad.size > 0:
+      for j in range(len(x)):
+        if len(term_indices) == 1 and term_indices[0] == j:
+          grad_terms[j, i+1] = 1
+        if len(term_indices) == 2:
+          if term_indices[0] == j and term_indices[1] == j:
+            grad_terms[j, i+1] = 2.0*x[j]
+          elif term_indices[0] == j:
+            grad_terms[j, i+1] = x[term_indices[1]]
+          elif term_indices[1] == j:
+            grad_terms[j, i+1] = x[term_indices[0]]
 
   if grad is not None and grad.size > 0:
     grad[:] = factor*grad_terms.dot(rs_coefficients)
@@ -121,8 +116,6 @@ def get_pareto_points(data, parameters, parameter_types, parameter_options, num_
 
 def _get_pareto_points(data, inputs, outputs, num_pareto_points,
                        parameter_options, term_indices_list, rs_coefficients):
-
-  global x_prev
   
   x_axis_output = None
   y_axis_output = None
@@ -168,29 +161,19 @@ def _get_pareto_points(data, inputs, outputs, num_pareto_points,
                                 rs_coefficients[x_axis_output]))
   opt.set_lower_bounds(input_mins)
   opt.set_upper_bounds(input_maxes)
-  opt.set_ftol_rel(1.0e-8)
+  opt.set_ftol_rel(1.0e-12)
 
   # find xmin
-  try:
-    xopt = opt.optimize(x_start)
-  except nlopt.RoundoffLimited as e:
-    print('round off limited, using previous iteration')
-    xopt = x_prev
-  except Exception as e:
-    print('nlopt error getting xmin:', e)
+  xopt = opt.optimize(x_start)
+
   xmin = _evaluate_response_surface(term_indices_list, rs_coefficients[x_axis_output], xopt)
 
   opt.set_max_objective(partial(_evaluate_response_surface, term_indices_list,
                                 rs_coefficients[x_axis_output]))
 
   # find xmax
-  try:
-    xopt = opt.optimize(x_start)
-  except nlopt.RoundoffLimited as e:
-    print('round off limited, using previous iteration')
-    xopt = x_prev
-  except Exception as e:
-    print('nlopt error getting xmax:', e)
+  xopt = opt.optimize(x_start)
+
   xmax = _evaluate_response_surface(term_indices_list, rs_coefficients[x_axis_output], xopt)
 
   x_targets = np.linspace(xmin, xmax, num_pareto_points)
@@ -198,47 +181,52 @@ def _get_pareto_points(data, inputs, outputs, num_pareto_points,
   pareto_designs = None
 
   opt = nlopt.opt(nlopt.LD_SLSQP, len(inputs))
-  # opt = nlopt.opt(nlopt.GN_ISRES, len(inputs))
+  opt_global = nlopt.opt(nlopt.GN_ISRES, len(inputs))
 
   if y_axis_goal == "minimize":
     opt.set_min_objective(partial(_evaluate_response_surface, term_indices_list,
                                   rs_coefficients[y_axis_output]))
+    opt_global.set_min_objective(partial(_evaluate_response_surface, term_indices_list,
+                                        rs_coefficients[y_axis_output]))
   else:
     opt.set_max_objective(partial(_evaluate_response_surface, term_indices_list,
                                   rs_coefficients[y_axis_output]))
+    opt_global.set_max_objective(partial(_evaluate_response_surface, term_indices_list,
+                                         rs_coefficients[y_axis_output]))
 
   for target_output in target_outputs:
     opt.add_equality_constraint(_evaluate_response_surface,
                                 term_indices_list, rs_coefficients[target_output],
                                 offset=-parameter_options[outputs[target_output]]['target'])
+    opt_global.add_equality_constraint(_evaluate_response_surface,
+                                term_indices_list, rs_coefficients[target_output],
+                                offset=-parameter_options[outputs[target_output]]['target'])
 
   opt.set_lower_bounds(input_mins)
+  opt_global.set_lower_bounds(input_mins)
+  
   opt.set_upper_bounds(input_maxes)
+  opt_global.set_upper_bounds(input_maxes)
 
-  opt.set_ftol_rel(1.0e-8)
+  # opt.set_ftol_rel(1.0e-12)
   # opt.set_xtol_rel(1.0e-12)
-  # opt.set_maxeval(100)
+  opt_global.set_maxeval(1000)
 
   for x_target in x_targets:
     opt.remove_inequality_constraints()
+    opt_global.remove_inequality_constraints()
 
-    if x_axis_goal == "minimize":
-      opt.add_inequality_constraint(partial(_evaluate_response_surface,
-                                            term_indices_list, rs_coefficients[x_axis_output],
-                                            offset=-x_target))
-    else:
-      opt.add_inequality_constraint(partial(_evaluate_response_surface,
-                                            term_indices_list, rs_coefficients[x_axis_output],
-                                            offset=-x_target, factor=-1.0))
+    sign = 1.0 if x_axis_goal == "minimize" else -1.0
+    opt.add_inequality_constraint(partial(_evaluate_response_surface,
+                                          term_indices_list, rs_coefficients[x_axis_output],
+                                          offset=-x_target, factor=sign))
+    opt_global.add_inequality_constraint(partial(_evaluate_response_surface,
+                                                 term_indices_list, rs_coefficients[x_axis_output],
+                                                 offset=-x_target, factor=sign))
 
-    try:
-      xopt = opt.optimize(x_start)
-    except nlopt.RoundoffLimited as e:
-      print('round off limited, using previous iteration')
-      xopt = x_start
-    except Exception as e:
-      print('nlopt error getting pareto point:', e)
-      xopt = x_start
+    xopt_global = opt_global.optimize(x_start) # start with a global search to get a good starting point
+    xopt = opt.optimize(xopt_global) # finish up with the gradient based search
+    # xopt = xopt_global
 
     opt_outputs = []
     for i, output in enumerate(outputs):
