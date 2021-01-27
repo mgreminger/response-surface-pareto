@@ -85,19 +85,23 @@
             parameterOptions[i] = {
               goal: "minimize",
               target: (parMin[i] + parMax[i]) / 2,
+              targetText: (parMin[i] + parMax[i]) / 2
             };
+          } else {
+            parameterOptions[i].target = parseFloat(parameterOptions[i].targetText)
           }
           parameterOptions[i].x_axis = (i === xAxisOutput) ? true : false
           parameterOptions[i].y_axis = (i === yAxisOutput) ? true : false
         } else if (type === "input") {
           if (
             parameterOptions[i] === undefined ||
-            !("min" in parameterOptions[i])
+            !("minText" in parameterOptions[i])
           ) {
-            parameterOptions[i] = { min: parMin[i], max: parMax[i] };
+            parameterOptions[i] = { minText: parMin[i], maxText: parMax[i],
+                                    min: parMin[i], max: parMax[i] };
           } else {
-            parameterOptions[i].min = parseFloat(parameterOptions[i].min)
-            parameterOptions[i].max = parseFloat(parameterOptions[i].max)
+            parameterOptions[i].min = parseFloat(parameterOptions[i].minText)
+            parameterOptions[i].max = parseFloat(parameterOptions[i].maxText)
           }
         }
       }
@@ -151,12 +155,12 @@ $: if(!fullyDefined) {
       {#if parameterTypes[i] && parameterTypes[i] === 'input'}
         <span>Lower Limit: </span>
         <input
-          class:error={isNaN(parseFloat(parameterOptions[i].min))}
-          bind:value={parameterOptions[i].min} />
+          class:error={isNaN(parseFloat(parameterOptions[i].minText))}
+          bind:value={parameterOptions[i].minText} />
         <span>Upper Limit: </span>
         <input
-          class:error={isNaN(parseFloat(parameterOptions[i].max))}
-          bind:value={parameterOptions[i].max} />
+          class:error={isNaN(parseFloat(parameterOptions[i].maxText))}
+          bind:value={parameterOptions[i].maxText} />
       {:else if parameterTypes[i] && parameterTypes[i] === 'output'}
         <span>Goal: </span>
         <select bind:value={parameterOptions[i].goal}>
@@ -167,8 +171,8 @@ $: if(!fullyDefined) {
         {#if parameterOptions[i].goal === 'target'}
           <span>=</span>
           <input
-            class:error={isNaN(parseFloat(parameterOptions[i].target))}
-            bind:value={parameterOptions[i].target} />
+            class:error={isNaN(parseFloat(parameterOptions[i].targetText))}
+            bind:value={parameterOptions[i].targetText} />
         {/if}
       {/if}
     </label>
