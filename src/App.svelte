@@ -95,6 +95,9 @@
             !("min" in parameterOptions[i])
           ) {
             parameterOptions[i] = { min: parMin[i], max: parMax[i] };
+          } else {
+            parameterOptions[i].min = parseFloat(parameterOptions[i].min)
+            parameterOptions[i].max = parseFloat(parameterOptions[i].max)
           }
         }
       }
