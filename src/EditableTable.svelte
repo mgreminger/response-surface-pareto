@@ -1,10 +1,13 @@
 <script>
+  import { createEventDispatcher } from 'svelte';
   import { columnAdjust } from "./column_adjust";
 
   export let headers;
   export let editableHeaders = false;
   export let data = [[]];
   export let editableData = false;
+
+  const dispatch = createEventDispatcher();
 
   let longestRow;
 
@@ -21,6 +24,8 @@
           data.push(row.split("\t"));
         }
       });
+
+      dispatch('paste');
     }
   }
 

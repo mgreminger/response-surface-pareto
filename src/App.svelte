@@ -50,6 +50,14 @@
     pyodideWorker.postMessage([data, parameters, parameterTypes, parameterOptions, numParetoPoints]);
   }
 
+  function handlePaste(e){
+    // reset the options the user has chosen on a paste event
+    parameterTypes.fill("");
+    parameterOptions = [];
+    xAxisOutput = null;
+    yAxisOutput = null;
+  }
+
   function handleWorkerMessage(e){
     if (e.data === "pyodide_not_available") {
       // pyodide didn't load properly
@@ -141,7 +149,8 @@ $: if(!fullyDefined) {
   bind:data={dataText}
   editableData={true}
   bind:headers={parameters}
-  editableHeaders={true} />
+  editableHeaders={true}
+  on:paste={handlePaste} />
 
 {#if data}
   {#each parameters as parameter, i}
