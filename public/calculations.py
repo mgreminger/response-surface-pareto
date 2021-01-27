@@ -53,7 +53,7 @@ def _evaluate_response_surface(
 
 
 def _evaluate_response_surface_grad(
-    term_indices_list, rs_coefficients, x, factor=1.0, offset=0.0
+    term_indices_list, rs_coefficients, x, factor=1.0, offset=0.0, zeroed_comps=None
 ):
 
     grad_terms = np.zeros((len(x), len(term_indices_list) + 1))
@@ -70,7 +70,12 @@ def _evaluate_response_surface_grad(
                 elif term_indices[1] == j:
                     grad_terms[j, i + 1] = x[term_indices[0]]
 
-    return factor * grad_terms.dot(rs_coefficients)
+    grad = factor * grad_terms.dot(rs_coefficients)
+
+    if zeroed_comps is not None:
+        grad[np.nonzero(zeroed_comps)] = 0
+
+    return grad 
 
 
 def get_pareto_points(
@@ -169,6 +174,11 @@ def _get_pareto_points(
     input_mins = np.array(input_mins)
     input_maxes = np.array(input_maxes)
 
+    zeroed_comps = (input_maxes - input_mins) == 0
+
+    if np.count_nonzero(np.invert(zeroed_comps)) < 1:
+        raise ValueError("There must be at least one input parameter that is not fixed.")
+
     bounds = Bounds(input_mins, input_maxes)
 
     # set a starting point at center of all input values
@@ -185,7 +195,8 @@ def _get_pareto_points(
                 parameter_options[outputs[target_output]]["target"],
                 parameter_options[outputs[target_output]]["target"],
                 jac=partial(
-                    _evaluate_response_surface_grad, terms, response_surfaces[target_output]
+                    _evaluate_response_surface_grad, terms, response_surfaces[target_output],
+                    zeroed_comps=zeroed_comps
                 ),
             )
         )
@@ -197,7 +208,7 @@ def _get_pareto_points(
 
     def objective_func_grad(x, index, sign=1.0):
         return _evaluate_response_surface_grad(
-            terms, response_surfaces[index], x, factor=sign
+            terms, response_surfaces[index], x, factor=sign, zeroed_comps=zeroed_comps
         )
 
     # find the max and min possible x-axis values given the input variable range constraints
@@ -243,7 +254,8 @@ def _get_pareto_points(
             partial(_evaluate_response_surface, terms, response_surfaces[x_axis_output]),
             *limits,
             jac=partial(
-                _evaluate_response_surface_grad, terms, response_surfaces[x_axis_output]
+                _evaluate_response_surface_grad, terms, response_surfaces[x_axis_output],
+                zeroed_comps = zeroed_comps
             )
         )
 
