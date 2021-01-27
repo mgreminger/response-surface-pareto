@@ -216,6 +216,7 @@ def _get_pareto_points(
     res = minimize(
         objective_func,
         x0,
+        jac=objective_func_grad,
         args=(x_axis_output, 1.0),
         bounds=bounds,
         constraints=constraints,
