@@ -4,7 +4,7 @@ importScripts('pyodide/pyodide.js');
 pyodide_ready = false;
 
 pyodide_promise = languagePluginLoader
-.then(() => self.pyodide.loadPackage('nlopt'))
+.then(() => self.pyodide.loadPackage('trust-constr'))
 .then(() => fetch("calculations.py"))
 .then(response => response.text())
 .then((data) => {
