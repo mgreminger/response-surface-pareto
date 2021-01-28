@@ -118,6 +118,7 @@
 
   th {
     position: relative;
+    vertical-align: top;
   }
 
   td.error {
@@ -144,18 +145,18 @@
       <tr>
         {#each Array(longestRow) as _, j}
         <th>
-          {#if editableHeaders}
-              <div contenteditable="true" bind:textContent={$parameters[j]}>
-                {$parameters[j] ? $parameters[j] : ''}
-              </div>
-              <div class="grip" use:columnAdjust>&nbsp</div>
-          {:else}
-              <div>{$parameters[j] ? $parameters[j] : ''}</div>
-              <div class="grip" use:columnAdjust>&nbsp</div>
-          {/if}
-          
           <label>
-            {parameters[j]}:
+            {#if editableHeaders}
+                <div contenteditable="true" bind:textContent={$parameters[j]}>
+                  {$parameters[j] ? $parameters[j] : ''}
+                </div>
+                <div class="grip" use:columnAdjust>&nbsp</div>
+            {:else}
+                <div>{$parameters[j] ? $parameters[j] : ''}</div>
+                <div class="grip" use:columnAdjust>&nbsp</div>
+            {/if}
+          
+          
             <select bind:value={$parameterTypes[j]}>
               {#each types as type}
                 <option value={type.name}>{type.text}</option>
