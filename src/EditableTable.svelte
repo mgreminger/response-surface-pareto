@@ -2,14 +2,23 @@
   import { createEventDispatcher } from 'svelte';
   import { columnAdjust } from "./column_adjust";
 
-  export let headers;
-  export let editableHeaders = false;
-  export let data = [[]];
-  export let editableData = false;
+  import { data, dataText, parameters, parameterTypes, parameterOptions,
+           nonTargetOutputs, xAxisOutput, yAxisOutput, parMin, parMax,
+         } from './stores.js';
+
+  export let editableHeaders = true;
+  export let editableData = true;
 
   const dispatch = createEventDispatcher();
 
   let longestRow;
+
+  const types = [
+    { name: "", text: "" },
+    { name: "input", text: "Input Paramater" },
+    { name: "output", text: "Output Paramater" },
+    { name: "ignore", text: "Ignore Parameter" },
+  ];
 
   function handlePaste(event) {
     let pastedText = event.clipboardData.getData("text");
@@ -17,29 +26,76 @@
     // only paste if there are characters besides just white space
     if (pastedText.replace(/\s+/g, "").length > 0) {
       let rows = pastedText.split("\n");
-      headers = rows[0].split("\t");
-      data = [];
+      $parameters = rows[0].split("\t");
+      $dataText = [];
       rows.forEach((row, i) => {
         if (i > 0 && row.length > 0) {
-          data.push(row.split("\t"));
+          $dataText.push(row.split("\t"));
         }
+      $dataText = $dataText  // force svelte reactivity (push doesn't trigger reactivity)
       });
+
+      // reset the options the user has chosen on a paste event
+      $parameterTypes.fill("");
+      $parameterOptions = [];
+      $xAxisOutput = null;
+      $yAxisOutput = null;
 
       dispatch('paste');
     }
   }
 
+
   $: {
     longestRow = 0;
-    if (headers) {
-      longestRow = headers.length;
+    if ($parameters) {
+      longestRow = $parameters.length;
     }
-    for (let row of data) {
+    for (let row of $dataText) {
       if (row.length > longestRow) {
         longestRow = row.length;
       }
     }
   }
+
+  $: $parameterTypes.length = $parameters.length;
+
+  $: if ($data) {
+    $parameterOptions.length = $parameterTypes.length;
+    $parameterTypes.forEach((type, i) => {
+      if (type) {
+        if (type === "output") {
+          if (
+            $parameterOptions[i] === undefined ||
+            !("goal" in $parameterOptions[i])
+          ) {
+            $parameterOptions[i] = {
+              goal: "minimize",
+              target: ($parMin[i] + $parMax[i]) / 2,
+              targetText: ($parMin[i] + $parMax[i]) / 2
+            };
+          } else {
+            $parameterOptions[i].target = parseFloat($parameterOptions[i].targetText)
+          }
+          $parameterOptions[i].x_axis = (i === $xAxisOutput) ? true : false
+          $parameterOptions[i].y_axis = (i === $yAxisOutput) ? true : false
+        } else if (type === "input") {
+          if (
+            $parameterOptions[i] === undefined ||
+            !("minText" in $parameterOptions[i])
+          ) {
+            $parameterOptions[i] = { minText: $parMin[i], maxText: $parMax[i],
+                                    min: $parMin[i], max: $parMax[i] };
+          } else {
+            $parameterOptions[i].min = parseFloat($parameterOptions[i].minText)
+            $parameterOptions[i].max = parseFloat($parameterOptions[i].maxText)
+          }
+        }
+      }
+    });
+  }
+
+
 </script>
 
 <style>
@@ -76,23 +132,27 @@
     position: absolute;
     cursor: col-resize;
   }
+
+  input.error {
+    background-color: lightcoral;
+  }
 </style>
 
 <table on:paste|preventDefault={handlePaste}>
-  {#if headers}
+  {#if $parameters}
     <thead>
       <tr>
         {#each Array(longestRow) as _, j}
           {#if editableHeaders}
             <th>
-              <div contenteditable="true" bind:textContent={headers[j]}>
-                {headers[j] ? headers[j] : ''}
+              <div contenteditable="true" bind:textContent={$parameters[j]}>
+                {$parameters[j] ? $parameters[j] : ''}
               </div>
               <div class="grip" use:columnAdjust>&nbsp</div>
             </th>
           {:else}
             <th>
-              <div>{headers[j] ? headers[j] : ''}</div>
+              <div>{$parameters[j] ? $parameters[j] : ''}</div>
               <div class="grip" use:columnAdjust>&nbsp</div>
             </th>
           {/if}
@@ -100,20 +160,20 @@
       </tr>
     </thead>
   {/if}
-  {#each data as row, i}
+  {#each $dataText as row, i}
     <tbody>
       <tr>
         {#each Array(longestRow) as _, j}
           {#if editableData}
             <td
               contenteditable="true"
-              bind:textContent={data[i][j]}
-              class:error={isNaN(parseFloat(data[i][j]))}>
-              {data[i][j] ? data[i][j] : ''}
+              bind:textContent={$dataText[i][j]}
+              class:error={isNaN(parseFloat($dataText[i][j]))}>
+              {$dataText[i][j] ? $dataText[i][j] : ''}
             </td>
           {:else}
-            <td class:error={isNaN(parseFloat(data[i][j]))}>
-              {data[i][j] ? data[i][j] : ''}
+            <td class:error={isNaN(parseFloat($dataText[i][j]))}>
+              {$dataText[i][j] ? $dataText[i][j] : ''}
             </td>
           {/if}
         {/each}
@@ -121,3 +181,57 @@
     </tbody>
   {/each}
 </table>
+
+{#if $data}
+  {#each $parameters as parameter, i}
+    <label>
+      {parameter}:
+      <select bind:value={$parameterTypes[i]}>
+        {#each types as type}
+          <option value={type.name}>{type.text}</option>
+        {/each}
+      </select>
+      {#if $parameterTypes[i] && $parameterTypes[i] === 'input'}
+        <span>Lower Limit: </span>
+        <input
+          class:error={isNaN(parseFloat($parameterOptions[i].minText))}
+          bind:value={$parameterOptions[i].minText} />
+        <span>Upper Limit: </span>
+        <input
+          class:error={isNaN(parseFloat($parameterOptions[i].maxText))}
+          bind:value={$parameterOptions[i].maxText} />
+      {:else if $parameterTypes[i] && $parameterTypes[i] === 'output'}
+        <span>Goal: </span>
+        <select bind:value={$parameterOptions[i].goal}>
+          <option value={'minimize'}>Minimize</option>
+          <option value={'maximize'}>Maximize</option>
+          <option value={'target'}>Target</option>
+        </select>
+        {#if $parameterOptions[i].goal === 'target'}
+          <span>=</span>
+          <input
+            class:error={isNaN(parseFloat($parameterOptions[i].targetText))}
+            bind:value={$parameterOptions[i].targetText} />
+        {/if}
+      {/if}
+    </label>
+  {/each}
+  {#if $nonTargetOutputs.length >= 3}
+    <label>
+      x-axis output:
+      <select bind:value={$xAxisOutput}>
+        {#each $nonTargetOutputs as output}
+          <option value={output.index} selected={$xAxisOutput === output.index}>{output.text}</option>
+        {/each}
+      </select>
+    </label>
+    <label> 
+      y-axis output:
+      <select bind:value={$yAxisOutput}>
+        {#each $nonTargetOutputs as output}
+          <option value={output.index} selected={$yAxisOutput === output.index}>{output.text}</option>
+        {/each}
+      </select>
+    </label>
+  {/if}
+{:else}Data not defined{/if}

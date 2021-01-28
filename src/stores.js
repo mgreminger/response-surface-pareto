@@ -1,3 +1,4 @@
+import { min, max } from "mathjs";
 import { writable, derived } from 'svelte/store';
 
 export const dataText = writable([
@@ -21,16 +22,77 @@ export const parameterTypes = writable([]);
 export const parameterOptions = writable([]);
 export const numParetoPoints = writable(10);
 
+export const xAxisOutput = writable(null);
+export const yAxisOutput = writable(null);
+
 export const data = derived(
   dataText,
   $dataText => {
-    let result = undefined;
+    let data = undefined;
     if ($dataText.length > 0) {
-      result = $dataText.map((row) => row.map(parseFloat));
-      if (!result.flat().reduce((total, value) => total && !isNaN(value), true)) {
-        result = undefined; // at least on entry in the table is NaN
+      data = $dataText.map((row) => row.map(parseFloat));
+      if (!data.flat().reduce((total, value) => total && !isNaN(value), true)) {
+        data = undefined; // at least on entry in the table is NaN
       }
     }
-    return result;
+    return data;
   }
 );
+
+export const inputs = derived(
+  [parameters, parameterTypes],
+  ([$parameters, $parameterTypes]) => {
+    let inputs = []
+    $parameterTypes.forEach( (value, index) => {
+      if(value === 'input') {
+        inputs.push({index: index, text: $parameters[index]})
+      }
+    })
+    return inputs;
+  }
+)
+
+export const nonTargetOutputs = derived(
+  [parameters, parameterTypes, parameterOptions],
+  ([$parameters, $parameterTypes, $parameterOptions]) => {
+    let nonTargetOutputs = [{index:null, text: ''}]
+    $parameterTypes.forEach( (value, index) => {
+      if(value === 'output' && $parameterOptions[index] &&
+         $parameterOptions[index].goal !== 'target') {
+        nonTargetOutputs.push({index: index, text: $parameters[index]})
+      }
+    })
+    return nonTargetOutputs;
+  }
+)
+
+export const fullyDefined = derived(
+  [nonTargetOutputs, inputs, xAxisOutput, yAxisOutput],
+  ([$nonTargetOutputs, $inputs, $xAxisOutput, $yAxisOutput]) => {
+    return $nonTargetOutputs.length >= 3 && $inputs.length >= 1 && $xAxisOutput !== null && 
+    $yAxisOutput !== null && $xAxisOutput !== $yAxisOutput;
+  }
+)
+
+export const parMin = derived(
+  data,
+  $data => {
+    let parMin;
+    if ($data){
+      parMin = min($data, 0);
+    }
+    return parMin;
+  }
+)
+
+export const parMax = derived(
+  data,
+  $data => {
+    let parMax;
+    if ($data){
+      parMax = max($data, 0);
+    }
+    return parMax;
+  }
+)
+
