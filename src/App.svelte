@@ -40,13 +40,17 @@
 </script>
 
 <style>
+  .hidden {
+    display: none;
+  }
 </style>
 
 <Tabs tabs={['Input Data', 'Pareto Plot', 'Pareto Data']}
       bind:selectedTab>
-  {#if selectedTab === 0}
+  <div class="{selectedTab === 0 ? '' : 'hidden'}">
     <EditableTable />
-  {:else if selectedTab === 1}
+  </div>
+  <div class="{selectedTab === 1 ? '' : 'hidden'}">
     {#if $data}
       {#if $nonTargetOutputs.length >= 3}
         <label>
@@ -74,7 +78,8 @@
       <button on:click={getParetoData}>Generate Pareto Data</button>
       <Plot plotData={plotData}></Plot>
     {/if}
-  {:else}
+  </div>
+  <div class="{selectedTab === 2 ? '' : 'hidden'}">
       Pareto Data
-  {/if}
+  </div>
 </Tabs>
