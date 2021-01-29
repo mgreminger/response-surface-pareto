@@ -3,7 +3,7 @@
   import { columnAdjust } from "./column_adjust";
 
   import { data, dataText, parameters, parameterTypes, parameterOptions,
-           nonTargetOutputs, xAxisOutput, yAxisOutput, parMin, parMax,
+           xAxisOutput, yAxisOutput, parMin, parMax,
          } from './stores.js';
 
   export let editableHeaders = true;
@@ -32,7 +32,7 @@
         if (i > 0 && row.length > 0) {
           $dataText.push(row.split("\t"));
         }
-      $dataText = $dataText  // force svelte reactivity (push doesn't trigger reactivity)
+        $dataText = $dataText  // force svelte reactivity (push doesn't trigger reactivity)
       });
 
       // reset the options the user has chosen on a paste event
@@ -77,8 +77,6 @@
           } else {
             $parameterOptions[i].target = parseFloat($parameterOptions[i].targetText)
           }
-          $parameterOptions[i].x_axis = (i === $xAxisOutput) ? true : false
-          $parameterOptions[i].y_axis = (i === $yAxisOutput) ? true : false
         } else if (type === "input") {
           if (
             $parameterOptions[i] === undefined ||
@@ -214,23 +212,3 @@
   {/each}
 </table>
 
-{#if $data}
-  {#if $nonTargetOutputs.length >= 3}
-    <label>
-      x-axis output:
-      <select bind:value={$xAxisOutput}>
-        {#each $nonTargetOutputs as output}
-          <option value={output.index} selected={$xAxisOutput === output.index}>{output.text}</option>
-        {/each}
-      </select>
-    </label>
-    <label> 
-      y-axis output:
-      <select bind:value={$yAxisOutput}>
-        {#each $nonTargetOutputs as output}
-          <option value={output.index} selected={$yAxisOutput === output.index}>{output.text}</option>
-        {/each}
-      </select>
-    </label>
-  {/if}
-{:else}Data not defined{/if}
