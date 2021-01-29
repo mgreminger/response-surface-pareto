@@ -13,7 +13,7 @@
 
   $: if(plotData && plotlyLoaded) {
     if(!plot){
-      Plotly.newPlot( plotElement, plotData.data, plotData.layout);
+      plot = new Plotly.newPlot( plotElement, plotData.data, plotData.layout);
     } else {
       Plotly.react( plotElement, plotData.data, plotData.layout)
     }
