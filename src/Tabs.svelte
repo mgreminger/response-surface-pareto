@@ -18,6 +18,8 @@
     cursor: pointer;
     padding: 14px 16px;
     transition: 0.3s;
+    margin: 0;
+    border-radius: 0;
   }
 
   .tab button:hover {
@@ -29,6 +31,7 @@
   }
 
   .tabcontent {
+    display: block;
     padding: 6px 12px;
     border: 1px solid #ccc;
     border-top: none;
