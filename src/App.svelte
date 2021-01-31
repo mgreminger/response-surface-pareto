@@ -49,6 +49,13 @@
 
         $parameters = new_data[0];
         $dataText = new_data.slice(1);
+
+        // reset the options the user has chosen when loading a new file
+        $parameterTypes.fill("");
+        $parameterOptions = [];
+        $xAxisOutput = null;
+        $yAxisOutput = null;
+
       } 
       reader.readAsArrayBuffer(f);
     } else {
