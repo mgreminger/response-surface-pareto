@@ -5,7 +5,7 @@
   import Plot from "./Plot.svelte";
   import { data, dataText, parameters, parameterTypes, parameterOptions,
            numParetoPoints, fullyDefined, nonTargetOutputs, xAxisOutput,
-           yAxisOutput } from './stores.js';
+           yAxisOutput, resetOptions} from './stores.js';
 
   // start webworker for python calculations
   const pyodideWorker = new Worker('webworker.js');
@@ -51,10 +51,7 @@
         $dataText = new_data.slice(1);
 
         // reset the options the user has chosen when loading a new file
-        $parameterTypes.fill("");
-        $parameterOptions = [];
-        $xAxisOutput = null;
-        $yAxisOutput = null;
+        resetOptions();
 
       } 
       reader.readAsArrayBuffer(f);

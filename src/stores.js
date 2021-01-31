@@ -25,6 +25,13 @@ export const numParetoPoints = writable(10);
 export const xAxisOutput = writable(null);
 export const yAxisOutput = writable(null);
 
+export function resetOptions() {
+  parameterTypes.update(types => types.fill(""));
+  parameterOptions.set([]);
+  xAxisOutput.set(null);
+  yAxisOutput.set(null);
+}
+
 export const data = derived(
   dataText,
   $dataText => {

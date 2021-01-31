@@ -3,7 +3,7 @@
   import { columnAdjust } from "./column_adjust";
 
   import { data, dataText, parameters, parameterTypes, parameterOptions,
-           xAxisOutput, yAxisOutput, parMin, parMax,
+           xAxisOutput, yAxisOutput, parMin, parMax, resetOptions,
          } from './stores.js';
 
   export let editableHeaders = true;
@@ -36,10 +36,7 @@
       });
 
       // reset the options the user has chosen on a paste event
-      $parameterTypes.fill("");
-      $parameterOptions = [];
-      $xAxisOutput = null;
-      $yAxisOutput = null;
+      resetOptions();
 
       dispatch('paste');
     }
