@@ -1,6 +1,5 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { columnAdjust } from "./column_adjust";
 
   import { data, dataText, parameters, parameterTypes, parameterOptions,
            parMin, parMax, resetOptions, xlsxLoaded, loadExample
@@ -192,15 +191,6 @@
     background-color: lightcoral;
   }
 
-  div.grip {
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 5px;
-    position: absolute;
-    cursor: col-resize;
-  }
-
   input.error {
     background-color: lightcoral;
   }
@@ -233,10 +223,8 @@
                     <div contenteditable="true" bind:textContent={$parameters[j]}>
                       {$parameters[j] ? $parameters[j] : ''}
                     </div>
-                    <div class="grip" use:columnAdjust>&nbsp</div>
                 {:else}
                     <div>{$parameters[j] ? $parameters[j] : ''}</div>
-                    <div class="grip" use:columnAdjust>&nbsp</div>
                 {/if}
               
               
