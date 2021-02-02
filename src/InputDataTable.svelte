@@ -3,7 +3,7 @@
   import { columnAdjust } from "./column_adjust";
 
   import { data, dataText, parameters, parameterTypes, parameterOptions,
-           parMin, parMax, resetOptions, xlsxLoaded,
+           parMin, parMax, resetOptions, xlsxLoaded, loadExample
          } from './stores.js';
 
   export let editableHeaders = true;
@@ -46,9 +46,25 @@
     $xlsxLoaded = true;
   }
 
+  function dragOverHandler(e) {
+    // Prevent default behavior (Prevent file from being opened)
+    e.preventDefault();
+  }
+
+
   function handleFile(e) {
     if ($xlsxLoaded) {
-      let files = e.target.files, f = files[0];
+      console.log(e.type);
+      let files, f;
+      if (e.type === "drop") {
+        e.stopPropagation();
+        e.preventDefault();
+        files = e.dataTransfer.files;
+        f = files[0];
+      } else { 
+        files = e.target.files;
+        f = files[0];
+      }
       let reader = new FileReader();
       reader.onload = function(e) {
         let data = new Uint8Array(e.target.result);
@@ -136,6 +152,12 @@
     overflow-y: auto;
   }
 
+  div.drop {
+    width: 600px;
+    height: 400px;
+    background: gray;
+  }
+
   table,
   th,
   td {
@@ -174,80 +196,85 @@
 
 
 <input type="file" on:change={handleFile}/>
+<button on:click={loadExample}>Load Example Dataset</button>
 
-<div class="table">
-  <table on:paste|preventDefault={handlePaste}>
-    {#if $parameters}
-      <thead>
-        <tr>
-          {#each Array(longestRow) as _, j}
-          <th>
-            <label>
-              {#if editableHeaders}
-                  <div contenteditable="true" bind:textContent={$parameters[j]}>
-                    {$parameters[j] ? $parameters[j] : ''}
-                  </div>
-                  <div class="grip" use:columnAdjust>&nbsp</div>
-              {:else}
-                  <div>{$parameters[j] ? $parameters[j] : ''}</div>
-                  <div class="grip" use:columnAdjust>&nbsp</div>
-              {/if}
-            
-            
-              <select bind:value={$parameterTypes[j]}>
-                {#each types as type}
-                  <option value={type.name}>{type.text}</option>
-                {/each}
-              </select>
-              {#if $parameterTypes[j] && $parameterTypes[j] === 'input'}
-                <div>Lower Limit: </div>
-                <input
-                  class:error={isNaN(parseFloat($parameterOptions[j].minText))}
-                  bind:value={$parameterOptions[j].minText} />
-                <div>Upper Limit: </div>
-                <input
-                  class:error={isNaN(parseFloat($parameterOptions[j].maxText))}
-                  bind:value={$parameterOptions[j].maxText} />
-              {:else if $parameterTypes[j] && $parameterTypes[j] === 'output'}
-                <div>Goal: </div>
-                <select bind:value={$parameterOptions[j].goal}>
-                  <option value={'minimize'}>Minimize</option>
-                  <option value={'maximize'}>Maximize</option>
-                  <option value={'target'}>Target</option>
-                </select>
-                {#if $parameterOptions[j].goal === 'target'}
-                  <span>=</span>
-                  <input
-                    class:error={isNaN(parseFloat($parameterOptions[j].targetText))}
-                    bind:value={$parameterOptions[j].targetText} />
+{#if $parameters.length === 0}
+  <div class="drop" on:drop={handleFile} on:dragover={dragOverHandler}></div>
+{:else}
+  <div class="table">
+    <table on:paste|preventDefault={handlePaste}>
+      {#if $parameters}
+        <thead>
+          <tr>
+            {#each Array(longestRow) as _, j}
+            <th>
+              <label>
+                {#if editableHeaders}
+                    <div contenteditable="true" bind:textContent={$parameters[j]}>
+                      {$parameters[j] ? $parameters[j] : ''}
+                    </div>
+                    <div class="grip" use:columnAdjust>&nbsp</div>
+                {:else}
+                    <div>{$parameters[j] ? $parameters[j] : ''}</div>
+                    <div class="grip" use:columnAdjust>&nbsp</div>
                 {/if}
-              {/if}
-            </label>
+              
+              
+                <select bind:value={$parameterTypes[j]}>
+                  {#each types as type}
+                    <option value={type.name}>{type.text}</option>
+                  {/each}
+                </select>
+                {#if $parameterTypes[j] && $parameterTypes[j] === 'input'}
+                  <div>Lower Limit: </div>
+                  <input
+                    class:error={isNaN(parseFloat($parameterOptions[j].minText))}
+                    bind:value={$parameterOptions[j].minText} />
+                  <div>Upper Limit: </div>
+                  <input
+                    class:error={isNaN(parseFloat($parameterOptions[j].maxText))}
+                    bind:value={$parameterOptions[j].maxText} />
+                {:else if $parameterTypes[j] && $parameterTypes[j] === 'output'}
+                  <div>Goal: </div>
+                  <select bind:value={$parameterOptions[j].goal}>
+                    <option value={'minimize'}>Minimize</option>
+                    <option value={'maximize'}>Maximize</option>
+                    <option value={'target'}>Target</option>
+                  </select>
+                  {#if $parameterOptions[j].goal === 'target'}
+                    <span>=</span>
+                    <input
+                      class:error={isNaN(parseFloat($parameterOptions[j].targetText))}
+                      bind:value={$parameterOptions[j].targetText} />
+                  {/if}
+                {/if}
+              </label>
 
-          </th>
-          {/each}
-        </tr>
-      </thead>
-    {/if}
-    {#each $dataText as row, i}
-      <tbody>
-        <tr>
-          {#each Array(longestRow) as _, j}
-            {#if editableData}
-              <td
-                contenteditable="true"
-                bind:textContent={$dataText[i][j]}
-                class:error={isNaN(parseFloat($dataText[i][j]))}>
-                {$dataText[i][j] ? $dataText[i][j] : ''}
-              </td>
-            {:else}
-              <td class:error={isNaN(parseFloat($dataText[i][j]))}>
-                {$dataText[i][j] ? $dataText[i][j] : ''}
-              </td>
-            {/if}
-          {/each}
-        </tr>
-      </tbody>
-    {/each}
-  </table>
-</div>
+            </th>
+            {/each}
+          </tr>
+        </thead>
+      {/if}
+      {#each $dataText as row, i}
+        <tbody>
+          <tr>
+            {#each Array(longestRow) as _, j}
+              {#if editableData}
+                <td
+                  contenteditable="true"
+                  bind:textContent={$dataText[i][j]}
+                  class:error={isNaN(parseFloat($dataText[i][j]))}>
+                  {$dataText[i][j] ? $dataText[i][j] : ''}
+                </td>
+              {:else}
+                <td class:error={isNaN(parseFloat($dataText[i][j]))}>
+                  {$dataText[i][j] ? $dataText[i][j] : ''}
+                </td>
+              {/if}
+            {/each}
+          </tr>
+        </tbody>
+      {/each}
+    </table>
+  </div>
+{/if}

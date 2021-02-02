@@ -1,23 +1,8 @@
 import { min, max } from "mathjs";
 import { writable, derived } from 'svelte/store';
 
-export const dataText = writable([
-  ["7.5", "15", "0.8779", "1270.98"],
-  ["2.5", "15", "7.87986", "426.956"],
-  ["7.5", "7", "1.46584", "1101.3"],
-  ["2.5", "7", "22.17822", "368.753"],
-  ["7.5", "11", "1.13536", "1186.14"],
-  ["2.5", "11", "12.27396", "397.855"],
-  ["5", "15", "2.14489", "850.594"],
-  ["5", "7", "4.30295", "735.856"],
-  ["5", "11", "2.94196", "793.225"],
-]);
-export const parameters = writable([
-  "Material Thickness (mm)",
-  "Rib Height (mm)",
-  "Displacement (mm)",
-  "Mass (g)",
-]);
+export const dataText = writable([[]]);
+export const parameters = writable([]);
 export const parameterTypes = writable([]);
 export const parameterOptions = writable([]);
 export const numParetoPoints = writable(10);
@@ -32,6 +17,29 @@ export function resetOptions() {
   parameterOptions.set([]);
   xAxisOutput.set(null);
   yAxisOutput.set(null);
+}
+
+export function loadExample() {
+  parameters.set([
+    "Material Thickness (mm)",
+    "Rib Height (mm)",
+    "Displacement (mm)",
+    "Mass (g)",
+  ]);
+
+  dataText.set([
+    ["7.5", "15", "0.8779", "1270.98"],
+    ["2.5", "15", "7.87986", "426.956"],
+    ["7.5", "7", "1.46584", "1101.3"],
+    ["2.5", "7", "22.17822", "368.753"],
+    ["7.5", "11", "1.13536", "1186.14"],
+    ["2.5", "11", "12.27396", "397.855"],
+    ["5", "15", "2.14489", "850.594"],
+    ["5", "7", "4.30295", "735.856"],
+    ["5", "11", "2.94196", "793.225"],
+  ])
+
+  resetOptions();
 }
 
 export const data = derived(
