@@ -125,7 +125,16 @@ def get_pareto_points(
 
     plot = {"data": [pareto_line, original_points], "layout": layout}
 
-    return json.dumps(plot)
+    headers = []
+    for input in inputs:
+        headers.append(parameters[input])
+    
+    for output in outputs:
+        headers.append(parameters[output])
+
+    pareto_dict = {'headers': headers, 'data': pareto_data.tolist()}
+
+    return json.dumps({'plot':plot, 'data':pareto_dict})
 
 
 def _get_pareto_points(

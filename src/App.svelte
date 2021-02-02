@@ -1,6 +1,7 @@
 <script>
   import { onDestroy } from 'svelte';
   import InputDataTable from "./InputDataTable.svelte";
+  import Table from "./Table.svelte";
   import Tabs from "./Tabs.svelte";
   import Plot from "./Plot.svelte";
   import { data, parameters, parameterTypes, parameterOptions,
@@ -14,6 +15,7 @@
 
   let selectedTab = 0;
   let plotData = null;
+  let paretoData = null;
   let xlsxLoaded = false;
 
   function getParetoData(){
@@ -25,13 +27,15 @@
       // pyodide didn't load properly
       console.error('Pyodide not available for calculations')
     } else {
-      plotData = e.data;
+      plotData = e.data.plot;
+      paretoData = e.data.data;
     }
   }
 
 
   $: if(!$fullyDefined) {
     plotData = null;
+    paretoData = null;
   }
 
   $: $parameterOptions.forEach((option, i) => {
@@ -49,11 +53,11 @@
 
 
 <Tabs tabs={['Input Data', 'Pareto Plot', 'Pareto Data']} bind:selectedTab>
-  <div class="{selectedTab === 0 ? '' : 'hidden'}">
+  <div class:hidden={selectedTab !== 0}>
     <InputDataTable />
   </div>
-  <div class="{selectedTab === 1 ? '' : 'hidden'}">
-    {#if $data}
+  <div class:hidden={selectedTab !== 1}>
+    {#if $parameterOptions.length > 0}
       {#if $nonTargetOutputs.length >= 3}
         <label>
           x-axis output:
@@ -71,8 +75,12 @@
             {/each}
           </select>
         </label>
+      {:else}
+        Select at least one input and at least 2 non-target outputs.
       {/if}
-    {:else}Data not defined{/if}
+    {:else}
+      No data loaded.
+    {/if}
     {#if $fullyDefined}
       <label>
         Number of Pareto points: <input type=number bind:value={$numParetoPoints} min=3 max=100>
@@ -81,7 +89,11 @@
       <Plot plotData={plotData}></Plot>
     {/if}
   </div>
-  <div class="{selectedTab === 2 ? '' : 'hidden'}">
-      Pareto Data
+  <div class:hidden={selectedTab !== 2}>
+      {#if paretoData}
+        <Table headers={paretoData.headers} data={paretoData.data}></Table>
+      {:else}
+        Generate Pareto plot to obtain Pareto data.
+      {/if}
   </div>
 </Tabs>
