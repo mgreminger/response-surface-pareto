@@ -13,6 +13,7 @@
 
   let longestRow;
   let fileSelector;
+  let inDropZone = false;
 
   const types = [
     { name: "", text: "" },
@@ -46,12 +47,6 @@
   function updateXlsxLoaded(){
     $xlsxLoaded = true;
   }
-
-  function dragOverHandler(e) {
-    // Prevent default behavior (Prevent file from being opened)
-    e.preventDefault();
-  }
-
 
   function handleFile(e) {
     if ($xlsxLoaded) {
@@ -159,13 +154,21 @@
     background: lightgray;
     border-radius: 10px;
     border: 1px dashed black;
-    text-align: center;
+    /* text-align: center; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
-  div.drop ul { 
-    display: inline-block; 
-    text-align: left; 
-	}
+  div.drop::before {
+    content: 'Drop File Here';
+  }
+
+  div.in_zone {
+    border: 2px solid black;
+    background: rgb(241, 241, 241);
+    font-weight: bold;
+  } 
 
   table,
   th,
@@ -208,13 +211,14 @@
 <button on:click={loadExample}>Load Example Dataset</button>
 
 {#if $parameters.length === 0}
-  <div class="drop" on:drop={handleFile} on:dragover={dragOverHandler}>
-    <h3>Load the Response Surface Data</h3>
-    <ul>
-      <li>Drag and drop a spreadsheet file into this box</li>
-      <li><a href="#!" on:click|preventDefault={fileSelector.click()}>Browse</a> to select a file</li>
-      <li>Paste the spreadsheet data here: <input on:paste|preventDefault={handlePaste}/></li>
-    </ul>
+  <h3>Load the Response Surface Data</h3>
+  <ul>
+    <li>Drag and drop a spreadsheet file into the box below</li>
+    <li><a href="javscript:void(0)" on:click|preventDefault={fileSelector.click()}>Browse</a> to select a file</li>
+    <li>Paste the spreadsheet data here: <input on:paste|preventDefault={handlePaste}/></li>
+  </ul>
+  <div class="drop" class:in_zone="{inDropZone}" on:drop={handleFile} on:dragover|preventDefault
+       on:dragenter={e => inDropZone=true} on:dragleave={e => inDropZone=false}>
   </div>
 {:else}
   <div class="table">
