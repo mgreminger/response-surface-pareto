@@ -6,7 +6,7 @@
   import Plot from "./Plot.svelte";
   import { data, parameters, parameterTypes, parameterOptions,
            numParetoPoints, fullyDefined, nonTargetOutputs, xAxisOutput,
-           yAxisOutput} from './stores.js';
+           yAxisOutput, xlsxLoaded} from './stores.js';
 
   // start webworker for python calculations
   const pyodideWorker = new Worker('webworker.js');
@@ -16,7 +16,6 @@
   let selectedTab = 0;
   let plotData = null;
   let paretoData = null;
-  let xlsxLoaded = false;
 
   function getParetoData(){
     pyodideWorker.postMessage([$data, $parameters, $parameterTypes, $parameterOptions, $numParetoPoints]);
@@ -32,6 +31,14 @@
     }
   }
 
+  function handleSaveParetoData(e){
+    if($xlsxLoaded && paretoData){
+      let workbook = XLSX.utils.book_new();
+      let sheet = XLSX.utils.aoa_to_sheet([paretoData.headers, ...paretoData.data]);
+      XLSX.utils.book_append_sheet(workbook, sheet, 'Pareto Data');
+      XLSX.writeFile(workbook, 'pareto_data.csv');
+    }
+  }
 
   $: if(!$fullyDefined) {
     plotData = null;
@@ -91,6 +98,7 @@
   </div>
   <div class:hidden={selectedTab !== 2}>
       {#if paretoData}
+        <button on:click={handleSaveParetoData}>Export as csv...</button>
         <Table headers={paretoData.headers} data={paretoData.data}></Table>
       {:else}
         Generate Pareto plot to obtain Pareto data.

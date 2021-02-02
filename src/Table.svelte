@@ -20,7 +20,7 @@
 <style>
   table {
     border-collapse: collapse;
-    margin: 5px;
+    margin: 0px;
   }
   table,
   th,
