@@ -12,6 +12,7 @@
   const dispatch = createEventDispatcher();
 
   let longestRow;
+  let fileSelector;
 
   const types = [
     { name: "", text: "" },
@@ -155,8 +156,16 @@
   div.drop {
     width: 600px;
     height: 400px;
-    background: gray;
+    background: lightgray;
+    border-radius: 10px;
+    border: 1px dashed black;
+    text-align: center;
   }
+
+  div.drop ul { 
+    display: inline-block; 
+    text-align: left; 
+	}
 
   table,
   th,
@@ -195,11 +204,18 @@
 </style>
 
 
-<input type="file" on:change={handleFile}/>
+<input bind:this={fileSelector} type="file" on:change={handleFile}/>
 <button on:click={loadExample}>Load Example Dataset</button>
 
 {#if $parameters.length === 0}
-  <div class="drop" on:drop={handleFile} on:dragover={dragOverHandler}></div>
+  <div class="drop" on:drop={handleFile} on:dragover={dragOverHandler}>
+    <h3>Load the Response Surface Data</h3>
+    <ul>
+      <li>Drag and drop a spreadsheet file into this box</li>
+      <li><a href="#!" on:click|preventDefault={fileSelector.click()}>Browse</a> to select a file</li>
+      <li>Paste the spreadsheet data here: <input on:paste|preventDefault={handlePaste}/></li>
+    </ul>
+  </div>
 {:else}
   <div class="table">
     <table on:paste|preventDefault={handlePaste}>
