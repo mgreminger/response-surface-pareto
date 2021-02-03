@@ -2,7 +2,8 @@
   import { createEventDispatcher } from 'svelte';
 
   import { data, dataText, parameters, parameterTypes, parameterOptions,
-           parMin, parMax, resetOptions, xlsxLoaded, loadExample
+           parMin, parMax, resetOptions, xlsxLoaded, loadPanelExample,
+           loadBottleExample
          } from './stores.js';
 
   export let editableHeaders = true;
@@ -35,6 +36,9 @@
         }
         $dataText = $dataText  // force svelte reactivity (push doesn't trigger reactivity)
       });
+
+      console.log($parameters);
+      console.log($dataText);
 
       // reset the options the user has chosen on a paste event
       resetOptions();
@@ -191,7 +195,8 @@
 
 
 <input bind:this={fileSelector} type="file" on:change={handleFile}/>
-<button on:click={loadExample}>Load Example Dataset</button>
+<button on:click={loadPanelExample}>Load Panel Example Dataset</button>
+<button on:click={loadBottleExample}>Load Bottle Example Dataset</button>
 
 {#if $parameters.length === 0}
   <h3>Load the Response Surface Data</h3>
