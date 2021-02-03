@@ -43,10 +43,6 @@
     }
   }
 
-  function updateXlsxLoaded(){
-    $xlsxLoaded = true;
-  }
-
   function handleFile(e) {
     if ($xlsxLoaded) {
       console.log(e.type);
@@ -133,9 +129,6 @@
 
 </script>
 
-<svelte:head>
-  <script src="./xlsx/xlsx.full.min.js" on:load={updateXlsxLoaded}></script>
-</svelte:head>
 
 <style>
   table {

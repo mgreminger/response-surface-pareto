@@ -6,29 +6,49 @@
   import Plot from "./Plot.svelte";
   import { data, parameters, parameterTypes, parameterOptions,
            numParetoPoints, fullyDefined, nonTargetOutputs, xAxisOutput,
-           yAxisOutput, xlsxLoaded} from './stores.js';
+           yAxisOutput, xlsxLoaded, plotlyLoaded} from './stores.js';
 
   // start webworker for python calculations
   const pyodideWorker = new Worker('webworker.js');
-  pyodideWorker.onmessage = handleWorkerMessage;
+  
   onDestroy(() => pyodideWorker.terminate());
 
   let selectedTab = 0;
   let plotData = null;
   let paretoData = null;
+  let plotPromise = null;
 
-  function getParetoData(){
-    pyodideWorker.postMessage([$data, $parameters, $parameterTypes, $parameterOptions, $numParetoPoints]);
+  function updatePlotlyLoaded(){
+    $plotlyLoaded = true;
   }
 
-  function handleWorkerMessage(e){
-    if (e.data === "pyodide_not_available") {
-      // pyodide didn't load properly
-      console.error('Pyodide not available for calculations')
-    } else {
-      plotData = e.data.plot;
-      paretoData = e.data.data;
-    }
+  function updateXlsxLoaded(){
+    $xlsxLoaded = true;
+  }
+
+  function getParetoData(){
+    return new Promise((resolve, reject) => {
+
+      function handleWorkerMessage(e){
+        if (e.data === "pyodide_not_available") {
+          // pyodide didn't load properly
+          reject('Pyodide not available for calculations');
+        } else {
+          resolve(e.data)
+        }
+      }
+      pyodideWorker.onmessage = handleWorkerMessage;
+      pyodideWorker.postMessage([$data, $parameters, $parameterTypes, $parameterOptions, $numParetoPoints]);
+
+    });
+  }
+
+  function handleGenerateParetoData () {
+    plotPromise = getParetoData()
+      .then(data => {
+        plotData = data.plot;
+        paretoData = data.data;
+      });
   }
 
   function handleSaveParetoData(e){
@@ -43,6 +63,7 @@
   $: if(!$fullyDefined) {
     plotData = null;
     paretoData = null;
+    plotPromise = null;
   }
 
   $: $parameterOptions.forEach((option, i) => {
@@ -58,6 +79,10 @@
   }
 </style>
 
+<svelte:head>
+  <script src="plotly/plotly-latest.min.js" on:load={updatePlotlyLoaded}></script>
+  <script src="./xlsx/xlsx.full.min.js" on:load={updateXlsxLoaded}></script>
+</svelte:head>
 
 <Tabs tabs={['Input Data', 'Pareto Plot', 'Pareto Data']} bind:selectedTab>
   <div class:hidden={selectedTab !== 0}>
@@ -92,8 +117,17 @@
       <label>
         Number of Pareto points: <input type=number bind:value={$numParetoPoints} min=3 max=100>
       </label>
-      <button on:click={getParetoData}>Generate Pareto Data</button>
-      <Plot plotData={plotData}></Plot>
+      <button on:click={handleGenerateParetoData}>Generate Pareto Data</button>
+      {#if plotPromise}
+        {#await plotPromise}
+          <span>Updating plot...</span>
+        {:catch error}
+          <span>{error.message}</span>
+        {/await}
+      {/if}
+      {#if plotData}
+        <Plot plotData={plotData}></Plot>
+      {/if}
     {/if}
   </div>
   <div class:hidden={selectedTab !== 2}>
