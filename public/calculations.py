@@ -102,35 +102,48 @@ def get_pareto_points(
         rs_coefficients,
     )
 
+
+    hovertemplate = ""
+    headers = []
+    for i, input in enumerate(inputs):
+        headers.append(parameters[input])
+        if hovertemplate == "":
+            hovertemplate = f"{parameters[input]}: %{{customdata[{i}]:.3g}}"
+        else:
+            hovertemplate += f"<br>{parameters[input]}: %{{customdata[{i}]:.3g}}"
+    
+    for i, output in enumerate(outputs):
+        headers.append(parameters[output])
+        hovertemplate += f"<br>{parameters[output]}: %{{customdata[{len(inputs)+i}]:.3g}}"
+
     pareto_line = {
         "x": pareto_data[:, len(inputs) + x_axis_output].tolist(),
         "y": pareto_data[:, len(inputs) + y_axis_output].tolist(),
+        "customdata": pareto_data.tolist(),
         "name": "Pareto Points",
         "type": "scatter",
         "mode": "lines+markers",
+        "hovertemplate": hovertemplate
     }
 
     original_points = {
         "x": data[:, outputs[x_axis_output]].tolist(),
         "y": data[:, outputs[y_axis_output]].tolist(),
+        "customdata": np.hstack( (data[:,inputs], data[:,outputs]) ).tolist(),
         "name": "Input Points",
         "type": "scatter",
         "mode": "markers",
+        "hovertemplate": hovertemplate
     }
 
     layout = {
+        "title": "Response Surface Pareto Plot",
+        "hovermode": "closest",
         "xaxis": {"title": parameters[outputs[x_axis_output]]},
         "yaxis": {"title": parameters[outputs[y_axis_output]]},
     }
 
     plot = {"data": [pareto_line, original_points], "layout": layout}
-
-    headers = []
-    for input in inputs:
-        headers.append(parameters[input])
-    
-    for output in outputs:
-        headers.append(parameters[output])
 
     pareto_dict = {'headers': headers, 'data': pareto_data.tolist()}
 
