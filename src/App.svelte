@@ -81,7 +81,7 @@
 
 <svelte:head>
   <script src="plotly/plotly-latest.min.js" on:load={updatePlotlyLoaded}></script>
-  <script src="./xlsx/xlsx.full.min.js" on:load={updateXlsxLoaded}></script>
+  <script src="xlsx/xlsx.full.min.js" on:load={updateXlsxLoaded}></script>
 </svelte:head>
 
 <Tabs tabs={['Input Data', 'Pareto Plot', 'Pareto Data']} bind:selectedTab>
