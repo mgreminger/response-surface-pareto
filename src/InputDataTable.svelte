@@ -216,46 +216,43 @@
           <tr>
             {#each Array(longestRow) as _, j}
             <th>
-              <label>
-                {#if editableHeaders}
-                    <div contenteditable="true" bind:textContent={$parameters[j]}>
-                      {$parameters[j] ? $parameters[j] : ''}
-                    </div>
-                {:else}
-                    <div>{$parameters[j] ? $parameters[j] : ''}</div>
-                {/if}
-              
-              
-                <select bind:value={$parameterTypes[j]}>
-                  {#each types as type}
-                    <option value={type.name}>{type.text}</option>
-                  {/each}
+              {#if editableHeaders}
+                  <div contenteditable="true" bind:textContent={$parameters[j]}>
+                    {$parameters[j] ? $parameters[j] : ''}
+                  </div>
+              {:else}
+                  <div>{$parameters[j] ? $parameters[j] : ''}</div>
+              {/if}
+            
+            
+              <select bind:value={$parameterTypes[j]}>
+                {#each types as type}
+                  <option value={type.name}>{type.text}</option>
+                {/each}
+              </select>
+              {#if $parameterTypes[j] && $parameterTypes[j] === 'input'}
+                <div>Lower Limit: </div>
+                <input
+                  class:error={isNaN(parseFloat($parameterOptions[j].minText))}
+                  bind:value={$parameterOptions[j].minText} />
+                <div>Upper Limit: </div>
+                <input
+                  class:error={isNaN(parseFloat($parameterOptions[j].maxText))}
+                  bind:value={$parameterOptions[j].maxText} />
+              {:else if $parameterTypes[j] && $parameterTypes[j] === 'output'}
+                <div>Goal: </div>
+                <select bind:value={$parameterOptions[j].goal}>
+                  <option value={'minimize'}>Minimize</option>
+                  <option value={'maximize'}>Maximize</option>
+                  <option value={'target'}>Target</option>
                 </select>
-                {#if $parameterTypes[j] && $parameterTypes[j] === 'input'}
-                  <div>Lower Limit: </div>
+                {#if $parameterOptions[j].goal === 'target'}
+                  <span>=</span>
                   <input
-                    class:error={isNaN(parseFloat($parameterOptions[j].minText))}
-                    bind:value={$parameterOptions[j].minText} />
-                  <div>Upper Limit: </div>
-                  <input
-                    class:error={isNaN(parseFloat($parameterOptions[j].maxText))}
-                    bind:value={$parameterOptions[j].maxText} />
-                {:else if $parameterTypes[j] && $parameterTypes[j] === 'output'}
-                  <div>Goal: </div>
-                  <select bind:value={$parameterOptions[j].goal}>
-                    <option value={'minimize'}>Minimize</option>
-                    <option value={'maximize'}>Maximize</option>
-                    <option value={'target'}>Target</option>
-                  </select>
-                  {#if $parameterOptions[j].goal === 'target'}
-                    <span>=</span>
-                    <input
-                      class:error={isNaN(parseFloat($parameterOptions[j].targetText))}
-                      bind:value={$parameterOptions[j].targetText} />
-                  {/if}
+                    class:error={isNaN(parseFloat($parameterOptions[j].targetText))}
+                    bind:value={$parameterOptions[j].targetText} />
                 {/if}
-              </label>
-
+              {/if}
             </th>
             {/each}
           </tr>
