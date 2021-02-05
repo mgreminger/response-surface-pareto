@@ -84,7 +84,7 @@
   <script src="xlsx/xlsx.full.min.js" on:load={updateXlsxLoaded}></script>
 </svelte:head>
 
-<Tabs tabs={['Input Data', 'Pareto Plot', 'Pareto Data']} bind:selectedTab>
+<Tabs tabs={['Input Data', 'Pareto Plot', 'Pareto Data', 'Instructions']} bind:selectedTab>
   <div class:hidden={selectedTab !== 0}>
     <InputDataTable />
   </div>
@@ -137,5 +137,17 @@
       {:else}
         Generate Pareto plot to obtain Pareto data.
       {/if}
+  </div>
+  <div class:hidden={selectedTab !== 3}>
+    <h3>Instructions</h3>
+    <p>The design of experiments (DOE) data can be loaded as either a spreadsheet file (Excel or CSV format)
+      or it can be pasted into box indicated on the Input Data tab. The first row must be the data headers
+      and these headers may be edited after the data is loaded. If an Excel file is loaded, only the first
+      sheet will be used and there shouldn't be any other contents in the sheet besides the headers and 
+      the DOE data. At least one input and two non-target outputs need to be specified in order to create
+      a Pareto plot. A <a href="https://youtu.be/eRcOnL-D1DA" target="_blank">tutorial video</a> is available that goes 
+      over how to use this tool.
+    </p>
+    
   </div>
 </Tabs>
