@@ -84,7 +84,7 @@
   <script src="xlsx/xlsx.full.min.js" on:load={updateXlsxLoaded}></script>
 </svelte:head>
 
-<Tabs tabs={['Input Data', 'Pareto Plot', 'Pareto Data', 'Instructions']} bind:selectedTab>
+<Tabs tabs={['Input Data', 'Pareto Plot', 'Pareto Data', 'Instructions', 'About']} bind:selectedTab>
   <div class:hidden={selectedTab !== 0}>
     <InputDataTable />
   </div>
@@ -148,6 +148,23 @@
       a Pareto plot. A <a href="https://youtu.be/eRcOnL-D1DA" target="_blank">tutorial video</a> is available that goes 
       over how to use this tool.
     </p>
-    
+  </div>
+  <div class:hidden={selectedTab !== 4}>
+    <p>This tool was developed by <a href="https://www.d.umn.edu/~mgreming/">Michael Greminger</a> at the 
+      University of Minnesota Duluth for use in his ME4145 CAD/CAM course. Report issues or bugs to the
+      author at <a href="mailto:mgreming@d.umn.edu">mgreming@d.umn.edu</a>. </p>
+    <p>Pareto front caculations are performed using Python in the browser with 
+      <a href="https://github.com/iodide-project/pyodide">Pyodide</a>. The 
+      <a href="https://github.com/mgreminger/trust-constr">trust-constr</a> algorithm that has been 
+      extracted from the <a href="https://www.scipy.org/">SciPy</a> library is used to performed the 
+      constrained optimization runs required to generated the Pareto front. 
+      <a href="https://svelte.dev/">Svelte</a> is used to implement the user interface, 
+      <a href="https://plotly.com/javascript/">plotly</a> is used for plotting, and 
+      <a href="https://github.com/SheetJS/sheetjs">sheetjs</a> is used for spreadsheet 
+      file I/O.
+    </p>
+    <p>This is an open source project and the source code is available on this project's 
+      <a href="https://github.com/mgreminger/response-surface-pareto">GitHub Page</a>.
+    </p>
   </div>
 </Tabs>
