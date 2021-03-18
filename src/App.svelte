@@ -32,7 +32,7 @@
       function handleWorkerMessage(e){
         if (e.data === "pyodide_not_available") {
           // pyodide didn't load properly
-          reject('Pyodide not available for calculations');
+          reject('Pyodide not available for calculations. Try refreshing page or using a different browser.');
         } else {
           resolve(e.data)
         }
@@ -122,7 +122,7 @@
         {#await plotPromise}
           <span>Updating plot...</span>
         {:catch error}
-          <span>{error.message}</span>
+          <span>{error}</span>
         {/await}
       {/if}
       {#if plotData}
