@@ -1,11 +1,11 @@
-import { chromium } from 'playwright';
+import { chromium, firefox } from 'playwright';
 import expect from 'expect';
 
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 4; 
 
-(async () => {
-  const browser = await chromium.launch({
+[chromium, firefox].forEach(async (currentBrowser) => {
+  const browser = await currentBrowser.launch({
     headless: false
   });
   const context = await browser.newContext();
@@ -105,4 +105,4 @@ const precision = 4;
   // ---------------------
   await context.close();
   await browser.close();
-})();
+});
