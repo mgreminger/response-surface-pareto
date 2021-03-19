@@ -13,6 +13,8 @@ const precision = 4;
   // Open new page
   const page = await context.newPage();
 
+  let startTime = Date.now();
+
   // Go to http://localhost:5000/
   await page.goto('http://localhost:5000/');
 
@@ -101,6 +103,8 @@ const precision = 4;
       expect(parseFloat(content)).toBeCloseTo(paretoPoints[row][col], precision)
     }
   }
+
+  console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`)
 
   // ---------------------
   await context.close();
