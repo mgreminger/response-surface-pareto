@@ -104,7 +104,15 @@ const precision = 4;
     }
   }
 
+  // Click text=Pareto Data
+  await page.click('text=Pareto Plot');
+
+  content = await page.textContent('text.xtitle');
+  expect(content).toBe('Disp. (mm)')
+
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`)
+
+  // await page.pause();
 
   // ---------------------
   await context.close();
