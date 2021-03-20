@@ -1,12 +1,22 @@
 import { chromium, firefox } from 'playwright';
 import expect from 'expect';
 
+const headless = false;
+
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 4; 
 
 [chromium, firefox].forEach(async (currentBrowser) => {
+
+  let args = [];
+  if (currentBrowser === chromium) {
+    args.push('--disable-web-security');
+    args.push('--enable-precise-memory-info');
+  } 
+
   const browser = await currentBrowser.launch({
-    headless: false
+    headless: headless,
+    args: args
   });
   const context = await browser.newContext();
 
@@ -111,6 +121,12 @@ const precision = 4;
   expect(content).toBe('Disp. (mm)')
 
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`)
+
+  // get memory info (only available on chromium)
+  if (!headless && currentBrowser === chromium) {
+    const memory = await page.evaluate('performance.measureUserAgentSpecificMemory()');
+    console.log(`Total memory usage (page + worker using chromium): ${memory.bytes/1024**2} MB`)
+  }
 
   // await page.pause();
 
