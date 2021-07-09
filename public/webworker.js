@@ -4,7 +4,13 @@ importScripts('pyodide/pyodide.js');
 pyodide_ready = false;
 
 pyodide_promise = languagePluginLoader
-.then(() => self.pyodide.loadPackage('trust-constr'))
+.then(() => self.pyodide.runPythonAsync(`
+import micropip
+import numpy as np
+from numpy.linalg import pinv
+await micropip.install('pyodide/trust_constr-1.0.0-py3-none-any.whl')
+from trust_constr import minimize, NonlinearConstraint, Bounds
+`))
 .then(() => fetch("calculations.py"))
 .then(response => response.text())
 .then((data) => {
