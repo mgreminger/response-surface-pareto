@@ -1,35 +1,39 @@
-self.languagePluginUrl = 'pyodide/';
+"use strict";
+
 importScripts('pyodide/pyodide.js');
 
-pyodide_ready = false;
+let pyodideReady = false;
+let pyFuncs;
 
-pyodide_promise = languagePluginLoader
-.then(() => self.pyodide.runPythonAsync(`
-import micropip
-import numpy as np
-from numpy.linalg import pinv
-await micropip.install('pyodide/trust_constr-1.0.0-py3-none-any.whl')
-from trust_constr import minimize, NonlinearConstraint, Bounds
-`))
-.then(() => fetch("calculations.py"))
-.then(response => response.text())
-.then((data) => {
-               self.py_funcs = self.pyodide.runPython(data);
-               console.log('Python Ready');
-               self.pyodide_ready = true
-             })
-.catch(e => {console.error('Python loading failed.');
-             console.error(e);}
-)
+async function setupPyodide() {
+  try {
+    await self.loadPyodide({ indexURL: 'pyodide/'});
+    await self.pyodide.loadPackage(['micropip', 'numpy']);
+    await self.pyodide.runPythonAsync(`
+      import micropip
+      await micropip.install('pyodide/trust_constr-1.0.0-py3-none-any.whl')
+    `);
+    const response = await fetch("calculations.py");
+    const pythonScript = await response.text();
+    pyFuncs = self.pyodide.runPython(pythonScript);
+    console.log('Python Ready');
+    pyodideReady = true;
+  } catch(e) {
+    console.error('Python loading failed.');
+    console.error(e);
+  }
+}
 
-onmessage = async function(e){
-  await pyodide_promise;
-  if (!self.pyodide_ready) {
+const pyodidePromise = setupPyodide();
+
+self.onmessage = async function(e){
+  await pyodidePromise;
+  if (!pyodideReady) {
     postMessage("pyodide_not_available");
     return;
   }
 
-  result = self.py_funcs.getParetoPoints(...e.data.map(JSON.stringify));
+  const result = pyFuncs.getParetoPoints(...e.data.map(JSON.stringify));
 
   postMessage(JSON.parse(result));
 }

@@ -3,6 +3,10 @@ from functools import partial
 
 import json
 
+import numpy as np
+from numpy.linalg import pinv
+from trust_constr import minimize, NonlinearConstraint, Bounds
+
 
 def _get_response_surface(data, parameter_types):
     inputs = []
