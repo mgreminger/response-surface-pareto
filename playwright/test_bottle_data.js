@@ -9,15 +9,8 @@ const precision = 4;
 [chromium, firefox].forEach(async (currentBrowser) => {
 
   let args = [];
-  if (currentBrowser === chromium) {
-    args.push('--disable-web-security');
-    args.push('--enable-precise-memory-info');
-  } 
 
-  const browser = await currentBrowser.launch({
-    headless: headless,
-    args: args
-  });
+  const browser = await currentBrowser.launch({ headless: headless});
   const context = await browser.newContext();
 
   // Open new page
@@ -25,8 +18,13 @@ const precision = 4;
 
   let startTime = Date.now();
 
-  // Go to http://localhost:5000/
-  await page.goto('http://localhost:5000/');
+  if (process.argv.length > 2) {
+    // use provided URL
+    await page.goto(process.argv[2]);
+  } else {
+    // no URL provided, use default local host
+    await page.goto('http://localhost:5000/');
+  }
 
   // Click text=Load Bottle Example Dataset
   await page.click('text=Load Bottle Example Dataset');
@@ -121,12 +119,6 @@ const precision = 4;
   expect(content).toBe('Disp. (mm)')
 
   console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`)
-
-  // get memory info (only available on chromium)
-  if (!headless && currentBrowser === chromium) {
-    const memory = await page.evaluate('performance.measureUserAgentSpecificMemory()');
-    console.log(`Total memory usage (page + worker using chromium): ${memory.bytes/1024**2} MB`)
-  }
 
   // await page.pause();
 
