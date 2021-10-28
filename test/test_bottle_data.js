@@ -1,4 +1,4 @@
-import { chromium, firefox } from 'playwright';
+import { chromium, firefox, webkit } from 'playwright';
 import expect from 'expect';
 
 const headless = false;
@@ -6,7 +6,7 @@ const headless = false;
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 4; 
 
-[chromium, firefox].forEach(async (currentBrowser) => {
+[chromium, firefox, webkit].forEach(async (currentBrowser) => {
 
   let args = [];
 
@@ -107,7 +107,8 @@ const precision = 4;
 
   for (let row=0; row<paretoPoints.length; row++) {
     for(let col=0; col<paretoPoints[0].length; col++) {
-      content = await page.textContent(`:below(button:has-text("Export as csv...")) >> :nth-match(td, ${col+numInputs+row*numCols+1})`);
+      content = await page.textContent(`:below(button:has-text("Export as csv...")) >> :nth-match(td, ${col+numInputs+row*numCols+1})`,
+                                       {timeout : 150000});
       expect(parseFloat(content)).toBeCloseTo(paretoPoints[row][col], precision)
     }
   }
