@@ -85,6 +85,7 @@ def get_pareto_points(
     parameters = json.loads(parameters)
     parameter_types = json.loads(parameter_types)
     parameter_options = json.loads(parameter_options)
+    num_pareto_points = int(num_pareto_points)
 
     # first need to define response surfaces
     inputs, outputs, term_indices_list, rs_coefficients = _get_response_surface(
