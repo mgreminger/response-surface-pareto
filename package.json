@@ -24,6 +24,7 @@
   "dependencies": {
     "mathjs": "^8.1.1",
     "plotly.js-basic-dist": "^2.8.3",
-    "sirv-cli": "^1.0.10"
+    "sirv-cli": "^1.0.10",
+    "xlsx": "^0.17.5"
   }
 }
