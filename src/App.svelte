@@ -75,6 +75,10 @@
   }
 </style>
 
+<svelte:head>
+  <script src="xlsx/xlsx.full.min.js" on:load={updateXlsxLoaded}></script>
+</svelte:head>
+
 <Tabs tabs={['Input Data', 'Pareto Plot', 'Pareto Data', 'Instructions', 'About']} bind:selectedTab>
   <div class:hidden={selectedTab !== 0}>
     <InputDataTable />
