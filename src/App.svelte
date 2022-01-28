@@ -6,7 +6,7 @@
   import Plot from "./Plot.svelte";
   import { data, parameters, parameterTypes, parameterOptions,
            numParetoPoints, fullyDefined, nonTargetOutputs, xAxisOutput,
-           yAxisOutput, xlsxLoaded, plotlyLoaded} from './stores.js';
+           yAxisOutput, xlsxLoaded} from './stores.js';
 
   // start webworker for python calculations
   const pyodideWorker = new Worker('webworker.js');
@@ -17,10 +17,6 @@
   let plotData = null;
   let paretoData = null;
   let plotPromise = null;
-
-  function updatePlotlyLoaded(){
-    $plotlyLoaded = true;
-  }
 
   function updateXlsxLoaded(){
     $xlsxLoaded = true;
@@ -78,11 +74,6 @@
     display: none;
   }
 </style>
-
-<svelte:head>
-  <script src="plotly/plotly-latest.min.js" on:load={updatePlotlyLoaded}></script>
-  <script src="xlsx/xlsx.full.min.js" on:load={updateXlsxLoaded}></script>
-</svelte:head>
 
 <Tabs tabs={['Input Data', 'Pareto Plot', 'Pareto Data', 'Instructions', 'About']} bind:selectedTab>
   <div class:hidden={selectedTab !== 0}>

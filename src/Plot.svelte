@@ -1,27 +1,22 @@
 <script>
-  import { onMount } from 'svelte';
-  import { plotlyLoaded } from './stores.js';  
+  import Plotly from 'plotly.js-basic-dist';
 
-  export let plotData = null;
+export let plotData = {};
 
-  let plotElement;
-  let plot = null;
-  let mounted = false;
+let plotElement;
+let plotCreated = false;
 
-  onMount( () => {
-    if(plotData){
-      plot = Plotly.newPlot( plotElement, plotData.data, plotData.layout);
-      mounted = true;
+$: if(plotElement && plotData) {
+  if(!plotCreated){
+    const config = {
+      displaylogo: true,
     }
-  });
-
-  $: if(mounted && plotData && $plotlyLoaded) {
-    if(!plot){
-      plot = Plotly.newPlot( plotElement, plotData.data, plotData.layout);
-    } else {
-      Plotly.react( plotElement, plotData.data, plotData.layout)
-    }
+    Plotly.newPlot( plotElement, plotData.data, plotData.layout, config)
+      .then(() => plotCreated = true);
+  } else {
+    Plotly.react( plotElement, plotData.data, plotData.layout);
   }
+}
 
 </script>
 
