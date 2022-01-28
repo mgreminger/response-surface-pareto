@@ -9,7 +9,7 @@ let plotCreated = false;
 $: if(plotElement && plotData) {
   if(!plotCreated){
     const config = {
-      displaylogo: false,
+      displaylogo: true,
     }
     Plotly.newPlot( plotElement, plotData.data, plotData.layout, config)
       .then(() => plotCreated = true);
