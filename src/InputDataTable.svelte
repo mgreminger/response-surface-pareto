@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte';
 
   import { data, dataText, parameters, parameterTypes, parameterOptions,
-           parMin, parMax, resetOptions, xlsxLoaded, loadPanelExample,
+           parMin, parMax, resetOptions, loadPanelExample,
            loadBottleExample
          } from './stores.js';
 
@@ -48,41 +48,8 @@
   }
 
   function handleFile(e) {
-    if ($xlsxLoaded) {
-      console.log(e.type);
-      let files, f;
-      if (e.type === "drop") {
-        e.stopPropagation();
-        e.preventDefault();
-        files = e.dataTransfer.files;
-        f = files[0];
-      } else { 
-        files = e.target.files;
-        f = files[0];
-      }
-      let reader = new FileReader();
-      reader.onload = function(e) {
-        let data = new Uint8Array(e.target.result);
-        let workbook = XLSX.read(data, {type: 'array'});
-
-        let first_sheet_name = workbook.SheetNames[0];
-
-        let worksheet = workbook.Sheets[first_sheet_name];
-
-        let new_data = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-
-        $parameters = new_data[0];
-        $dataText = new_data.slice(1);
-
-        // reset the options the user has chosen when loading a new file
-        resetOptions();
-
-      } 
-      reader.readAsArrayBuffer(f);
-    } else {
-          alert("XLSX Library not loaded yet, please try again.");
-    }
-  };
+    dispatch('loadfile', e);
+  }
 
   $: {
     longestRow = 0;

@@ -4,9 +4,11 @@
   import Table from "./Table.svelte";
   import Tabs from "./Tabs.svelte";
   import Plot from "./Plot.svelte";
-  import { data, parameters, parameterTypes, parameterOptions,
+  import { data, dataText, resetOptions, parameters, parameterTypes, parameterOptions,
            numParetoPoints, fullyDefined, nonTargetOutputs, xAxisOutput,
-           yAxisOutput, xlsxLoaded} from './stores.js';
+           yAxisOutput} from './stores.js';
+
+  import * as XLSX from 'xlsx';
 
   // start webworker for python calculations
   const pyodideWorker = new Worker('webworker.js');
@@ -18,9 +20,39 @@
   let paretoData = null;
   let plotPromise = null;
 
-  function updateXlsxLoaded(){
-    $xlsxLoaded = true;
-  }
+  function handleFile(event) {
+    let e = event.detail;
+    console.log(e.type);
+    let files, f;
+    if (e.type === "drop") {
+      e.stopPropagation();
+      e.preventDefault();
+      files = e.dataTransfer.files;
+      f = files[0];
+    } else { 
+      files = e.target.files;
+      f = files[0];
+    }
+    let reader = new FileReader();
+    reader.onload = function(e) {
+      let data = new Uint8Array(e.target.result);
+      let workbook = XLSX.read(data, {type: 'array'});
+
+      let first_sheet_name = workbook.SheetNames[0];
+
+      let worksheet = workbook.Sheets[first_sheet_name];
+
+      let new_data = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+
+      $parameters = new_data[0];
+      $dataText = new_data.slice(1);
+
+      // reset the options the user has chosen when loading a new file
+      resetOptions();
+
+    } 
+    reader.readAsArrayBuffer(f);
+  };
 
   function getParetoData(){
     return new Promise((resolve, reject) => {
@@ -48,7 +80,7 @@
   }
 
   function handleSaveParetoData(e){
-    if($xlsxLoaded && paretoData){
+    if(paretoData){
       let workbook = XLSX.utils.book_new();
       let sheet = XLSX.utils.aoa_to_sheet([paretoData.headers, ...paretoData.data]);
       XLSX.utils.book_append_sheet(workbook, sheet, 'Pareto Data');
@@ -75,13 +107,9 @@
   }
 </style>
 
-<svelte:head>
-  <script src="xlsx/xlsx.full.min.js" on:load={updateXlsxLoaded}></script>
-</svelte:head>
-
 <Tabs tabs={['Input Data', 'Pareto Plot', 'Pareto Data', 'Instructions', 'About']} bind:selectedTab>
   <div class:hidden={selectedTab !== 0}>
-    <InputDataTable />
+    <InputDataTable on:loadfile={handleFile}/>
   </div>
   <div class:hidden={selectedTab !== 1}>
     {#if $parameterOptions.length > 0}
