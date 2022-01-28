@@ -11,7 +11,6 @@ export const xAxisOutput = writable(null);
 export const yAxisOutput = writable(null);
 
 export const xlsxLoaded = writable(false);
-export const plotlyLoaded = writable(false);
 
 export function resetOptions() {
   parameterTypes.update((types) => types.fill(""));
