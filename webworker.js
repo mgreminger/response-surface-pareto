@@ -7,12 +7,8 @@ let pyFuncs;
 
 async function setupPyodide() {
   try {
-    const pyodide = await self.loadPyodide({ indexURL: 'pyodide/'});
-    await pyodide.loadPackage(['micropip', 'numpy']);
-    await pyodide.runPythonAsync(`
-      import micropip
-      await micropip.install('pyodide/trust_constr-1.0.0-py3-none-any.whl')
-    `);
+    const pyodide = await self.loadPyodide({ indexURL: 'pyodide/', packages: ['scipy']});
+
     const response = await fetch("calculations.py");
     const pythonScript = await response.text();
     pyFuncs = pyodide.runPython(pythonScript);
