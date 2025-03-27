@@ -1,30 +1,14 @@
-import { chromium, firefox, webkit } from 'playwright';
-import expect from 'expect';
-
-const headless = false;
+import { test, expect } from '@playwright/test';
 
 // number of digits of accuracy after decimal point for .toBeCloseTo() calls
 const precision = 4; 
 
-[chromium, firefox, webkit].forEach(async (currentBrowser) => {
-
-  let args = [];
-
-  const browser = await currentBrowser.launch({ headless: headless});
-  const context = await browser.newContext();
-
-  // Open new page
-  const page = await context.newPage();
+test('Test bottle data case', async ({ page, browserName })  => {
 
   let startTime = Date.now();
 
-  if (process.argv.length > 2) {
-    // use provided URL
-    await page.goto(process.argv[2]);
-  } else {
-    // no URL provided, use default local host
-    await page.goto('http://localhost:5000/');
-  }
+  // no URL provided, use default local host
+  await page.goto('http://localhost:5000/');
 
   // Click text=Load Bottle Example Dataset
   await page.click('text=Load Bottle Example Dataset');
@@ -119,11 +103,5 @@ const precision = 4;
   content = await page.textContent('text.xtitle');
   expect(content).toBe('Disp. (mm)')
 
-  console.log(`Elapsed time (${currentBrowser.name()}): ${(Date.now()-startTime)/1000} seconds`)
-
-  // await page.pause();
-
-  // ---------------------
-  await context.close();
-  await browser.close();
+  console.log(`Elapsed time (${browserName}): ${(Date.now()-startTime)/1000} seconds`)
 });
