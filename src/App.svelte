@@ -168,26 +168,28 @@
       and these headers may be edited after the data is loaded. If an Excel file is loaded, only the first
       sheet will be used and there shouldn't be any other contents in the sheet besides the headers and 
       the DOE data. At least one input and two non-target outputs need to be specified in order to create
-      a Pareto plot. A <a href="https://youtu.be/eRcOnL-D1DA" target="_blank">tutorial video</a> is available that goes 
+      a Pareto plot. A <a target="_blank" href="https://youtu.be/eRcOnL-D1DA">tutorial video</a> is available that goes 
       over how to use this tool.
     </p>
   </div>
   <div class:hidden={selectedTab !== 4}>
-    <p>This tool was developed by <a href="https://www.d.umn.edu/~mgreming/">Michael Greminger</a> at the 
+    <p>This tool was developed by <a target="_blank" href="https://www.d.umn.edu/~mgreming/">Michael Greminger</a> at the 
       University of Minnesota Duluth for use in his ME4145 CAD/CAM course. Report issues or bugs to the
-      author at <a href="mailto:mgreming@d.umn.edu">mgreming@d.umn.edu</a>. </p>
+      author at <a target="_blank" href="mailto:mgreming@d.umn.edu">mgreming@d.umn.edu</a>. </p>
     <p>Pareto front caculations are performed using Python in the browser with 
-      <a href="https://github.com/iodide-project/pyodide">Pyodide</a>. The 
-      <a href="https://github.com/mgreminger/trust-constr">trust-constr</a> algorithm that has been 
-      extracted from the <a href="https://www.scipy.org/">SciPy</a> library is used to performed the 
+      <a target="_blank" href="https://github.com/iodide-project/pyodide">Pyodide</a>. The 
+      <a target="_blank" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize">
+        scipy.optimize <em>minimize</em>
+      </a> 
+      function is used to performed the 
       constrained optimization runs required to generated the Pareto front. 
-      <a href="https://svelte.dev/">Svelte</a> is used to implement the user interface, 
-      <a href="https://plotly.com/javascript/">plotly</a> is used for plotting, and 
-      <a href="https://github.com/SheetJS/sheetjs">sheetjs</a> is used for spreadsheet 
+      <a target="_blank" href="https://svelte.dev/">Svelte</a> is used to implement the user interface, 
+      <a target="_blank" href="https://plotly.com/javascript/">plotly</a> is used for plotting, and 
+      <a target="_blank" href="https://github.com/SheetJS/sheetjs">sheetjs</a> is used for spreadsheet 
       file I/O.
     </p>
     <p>This is an open source project and the source code is available on this project's 
-      <a href="https://github.com/mgreminger/response-surface-pareto">GitHub Page</a>.
+      <a target="_blank" href="https://github.com/mgreminger/response-surface-pareto">GitHub Page</a>.
     </p>
   </div>
 </Tabs>
