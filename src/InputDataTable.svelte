@@ -107,10 +107,6 @@
     margin: 0px;
   }
 
-  div.table {
-    overflow-y: auto;
-  }
-
   div.drop {
     width: 600px;
     height: 400px;
@@ -147,7 +143,6 @@
   }
 
   th {
-    position: relative;
     vertical-align: top;
   }
 
