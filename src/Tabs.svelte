@@ -5,7 +5,6 @@
 
 <style>
   .tab {
-    overflow: hidden;
     border: 1px solid #ccc;
     background-color: #f1f1f1;
   }
@@ -31,6 +30,8 @@
   }
 
   .tabcontent {
+    overflow: auto;
+    height: 100%;
     display: block;
     padding: 6px 12px;
     border: 1px solid #ccc;

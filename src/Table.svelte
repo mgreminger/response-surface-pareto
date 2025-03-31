@@ -34,12 +34,7 @@
     text-align: left;
     width: 50px;
   }
-  th {
-    position: relative;
-  }
-  div.table {
-    overflow-y: auto;
-  }
+
 </style>
 
 <div class="table">
