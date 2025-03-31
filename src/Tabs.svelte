@@ -13,12 +13,16 @@
     background-color: inherit;
     float: left;
     border: none;
-    outline: none;
     cursor: pointer;
+    position: relative;
     padding: 14px 16px;
     transition: 0.3s;
     margin: 0;
     border-radius: 0;
+  }
+
+  .tab button:focus {
+    z-index: 100;
   }
 
   .tab button:hover {
